@@ -150,6 +150,11 @@ namespace Unity.MLAgents.Policies
         [Tooltip("Use all Sensor components attached to child GameObjects of this Agent.")]
         bool m_UseChildSensors = true;
 
+        [HideInInspector]
+        [SerializeField]
+        [Tooltip("Use all Actuator components attached to child GameObjects of this Agent.")]
+        bool m_UseChildActuators = true;
+
         /// <summary>
         /// Whether or not to use all the sensor components attached to child GameObjects of the agent.
         /// Note that changing this after the Agent has been initialized will not have any effect.
@@ -158,6 +163,16 @@ namespace Unity.MLAgents.Policies
         {
             get { return m_UseChildSensors; }
             set { m_UseChildSensors = value; }
+        }
+
+        /// <summary>
+        /// Whether or not to use all the actuator components attached to child GameObjects of the agent.
+        /// Note that changing this after the Agent has been initialized will not have any effect.
+        /// </summary>
+        public bool UseChildActuators
+        {
+            get { return m_UseChildActuators; }
+            set { m_UseChildActuators = value; }
         }
 
         [HideInInspector, SerializeField]

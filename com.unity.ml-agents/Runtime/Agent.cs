@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Google.Protobuf.WellKnownTypes;
 using UnityEngine;
 using Unity.Barracuda;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Sensors.Reflection;
 using Unity.MLAgents.Demonstrations;
@@ -48,15 +50,6 @@ namespace Unity.MLAgents
         /// to separate between different agents in the environment.
         /// </summary>
         public int episodeId;
-    }
-
-    /// <summary>
-    /// Struct that contains the action information sent from the Brain to the
-    /// Agent.
-    /// </summary>
-    internal struct AgentAction
-    {
-        public float[] vectorActions;
     }
 
     /// <summary>
@@ -222,9 +215,6 @@ namespace Unity.MLAgents
         /// Current Agent information (message sent to Brain).
         AgentInfo m_Info;
 
-        /// Current Agent action (message sent from Brain).
-        AgentAction m_Action;
-
         /// Represents the reward the agent accumulated during the current step.
         /// It is reset to 0 at the beginning of every step.
         /// Should be set to a positive value when the agent performs a "good"
@@ -280,6 +270,18 @@ namespace Unity.MLAgents
         /// VectorSensor which is written to by AddVectorObs
         /// </summary>
         internal VectorSensor collectObservationsSensor;
+
+        /// <summary>
+        /// List of IActuators that this Agent will delegate actions to if any exist.
+        /// </summary>
+        internal ActuatorList actuators;
+
+        /// <summary>
+        /// DiscreteVectorActuator which is used by default if no other sensors exist on this Agent. This VectorSensor will
+        /// delegate its actions to <see cref="OnActionReceived"/> by default in order to keep backward compatibility
+        /// with the current behavior of Agent.
+        /// </summary>
+        internal IActuator vectorActuator;
 
         /// <summary>
         /// Called when the attached [GameObject] becomes enabled and active.
@@ -385,7 +387,7 @@ namespace Unity.MLAgents
             m_PolicyFactory = GetComponent<BehaviorParameters>();
 
             m_Info = new AgentInfo();
-            m_Action = new AgentAction();
+            m_Info.storedVectorActions = new float[m_PolicyFactory.BrainParameters.NumActions];
             sensors = new List<ISensor>();
 
             Academy.Instance.AgentIncrementStep += AgentIncrementStep;
@@ -400,6 +402,11 @@ namespace Unity.MLAgents
             using (TimerStack.Instance.Scoped("InitializeSensors"))
             {
                 InitializeSensors();
+            }
+
+            using (TimerStack.Instance.Scoped("InitializeActuators"))
+            {
+                InitializeActuators();
             }
 
             // The first time the Academy resets, all Agents in the scene will be
@@ -730,13 +737,15 @@ namespace Unity.MLAgents
         {
             var param = m_PolicyFactory.BrainParameters;
             m_ActionMasker = new DiscreteActionMasker(param);
-            // If we haven't initialized vectorActions, initialize to 0. This should only
-            // happen during the creation of the Agent. In subsequent episodes, vectorAction
-            // should stay the previous action before the Done(), so that it is properly recorded.
-            if (m_Action.vectorActions == null)
+
+            if (actuators == null)
             {
-                m_Action.vectorActions = new float[param.NumActions];
-                m_Info.storedVectorActions = new float[param.NumActions];
+                return;
+            }
+
+            foreach (var actuator in actuators)
+            {
+                actuator.ResetData();
             }
         }
 
@@ -884,6 +893,57 @@ namespace Unity.MLAgents
 #endif
         }
 
+        void InitializeActuators()
+        {
+            ActuatorComponent[] attachedActuators;
+            if (m_PolicyFactory.UseChildActuators)
+            {
+                attachedActuators = GetComponentsInChildren<ActuatorComponent>();
+            }
+            else
+            {
+                attachedActuators = GetComponents<ActuatorComponent>();
+            }
+
+            // Support legacy OnActionReceived
+            var param = m_PolicyFactory.BrainParameters;
+            switch (param.VectorActionSpaceType)
+            {
+                case SpaceType.Continuous:
+                    vectorActuator = new ContinuousVectorActuator(param.VectorActionSize);
+                    break;
+                case SpaceType.Discrete:
+                    vectorActuator = new DiscreteVectorActuator(param.VectorActionSize);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Unknown SpaceType used:{param.VectorActionSpaceType}");
+            }
+
+            if (vectorActuator != null)
+            {
+                actuators = new ActuatorList(attachedActuators.Length);
+                actuators.Add(vectorActuator);
+            }
+
+            foreach (var actuatorComponent in attachedActuators)
+            {
+                actuators.Add(actuatorComponent.CreateActuator());
+            }
+
+            actuators.EnsureActionBufferSize();
+            // Sort the Actuators by name to ensure determinism
+            actuators.SortActuators();
+#if DEBUG
+            // Make sure the names are actually unique
+            for (var i = 0; i < actuators.Count - 1; i++)
+            {
+                Debug.Assert(
+                    !actuators[i].GetName().Equals(actuators[i + 1].GetName()),
+                    "Actuator names must be unique.");
+            }
+#endif
+        }
+
         /// <summary>
         /// Sends the Agent info to the linked Brain.
         /// </summary>
@@ -904,9 +964,9 @@ namespace Unity.MLAgents
             {
                 Array.Clear(m_Info.storedVectorActions, 0, m_Info.storedVectorActions.Length);
             }
-            else
+            else if (actuators.StoredActions != null)
             {
-                Array.Copy(m_Action.vectorActions, m_Info.storedVectorActions, m_Action.vectorActions.Length);
+                Array.Copy(actuators.StoredActions, m_Info.storedVectorActions, actuators.StoredActions.Length);
             }
             m_ActionMasker.ResetMask();
             UpdateSensors();
@@ -1123,7 +1183,7 @@ namespace Unity.MLAgents
         /// <seealso cref="OnActionReceived(float[])"/>
         public float[] GetAction()
         {
-            return m_Action.vectorActions;
+            return actuators.StoredActions;
         }
 
         /// <summary>
@@ -1177,7 +1237,8 @@ namespace Unity.MLAgents
             if ((m_RequestAction) && (m_Brain != null))
             {
                 m_RequestAction = false;
-                OnActionReceived(m_Action.vectorActions);
+                OnActionReceived(vectorActuator.Actions);
+                actuators.ExecuteActions();
             }
 
             if ((m_StepCount >= MaxStep) && (MaxStep > 0))
@@ -1189,20 +1250,12 @@ namespace Unity.MLAgents
 
         void DecideAction()
         {
-            if (m_Action.vectorActions == null)
+            if (actuators.StoredActions == null)
             {
                 ResetData();
             }
             var action = m_Brain?.DecideAction();
-
-            if (action == null)
-            {
-                Array.Clear(m_Action.vectorActions, 0, m_Action.vectorActions.Length);
-            }
-            else
-            {
-                Array.Copy(action, m_Action.vectorActions, action.Length);
-            }
+            actuators.UpdateActions(action);
         }
     }
 }
