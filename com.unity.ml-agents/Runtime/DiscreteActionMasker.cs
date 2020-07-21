@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 
 namespace Unity.MLAgents
@@ -15,7 +16,7 @@ namespace Unity.MLAgents
     /// may be illegal. For example, if an agent is adjacent to a wall or other obstacle
     /// you could mask any actions that direct the agent to move into the blocked space.
     /// </remarks>
-    public class DiscreteActionMasker
+    public class DiscreteActionMasker : IDiscreteActionMask
     {
         /// When using discrete control, is the starting indices of the actions
         /// when all the branches are concatenated with each other.
@@ -84,7 +85,7 @@ namespace Unity.MLAgents
         /// </summary>
         /// <returns>A mask for the agent. A boolean array of length equal to the total number of
         /// actions.</returns>
-        internal bool[] GetMask()
+        public bool[] GetMask()
         {
             if (m_CurrentMask != null)
             {
@@ -120,7 +121,7 @@ namespace Unity.MLAgents
         /// <summary>
         /// Resets the current mask for an agent.
         /// </summary>
-        internal void ResetMask()
+        public void ResetMask()
         {
             if (m_CurrentMask != null)
             {

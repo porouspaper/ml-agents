@@ -1,39 +1,55 @@
-using System.Collections.Generic;
+using System;
 using Unity.MLAgents.Policies;
 
 namespace Unity.MLAgents.Actuators
 {
+    public struct ActuatorSpace
+    {
+        public readonly SpaceType[] SpaceTypes;
+        public readonly int[] BranchSizes;
+        public readonly int NumActions;
+
+        public static ActuatorSpace MakeContinuous(int numActions)
+        {
+            var spaceTypes = new SpaceType[numActions];
+            for (var i = 0; i < numActions; i++)
+            {
+                spaceTypes[i] = SpaceType.Continuous;
+            }
+            var actuatorSpace = new ActuatorSpace(spaceTypes, numActions);
+            return actuatorSpace;
+        }
+
+        public static ActuatorSpace MakeDiscrete(int[] branchSizes)
+        {
+            var numActions = branchSizes.Length;
+            var spaceTypes = new SpaceType[numActions];
+            for (var i = 0; i < numActions; i++)
+            {
+                spaceTypes[i] = SpaceType.Discrete;
+            }
+            var actuatorSpace = new ActuatorSpace(spaceTypes, numActions, branchSizes);
+            return actuatorSpace;
+        }
+
+        ActuatorSpace(SpaceType[] spaceTypes, int numActions, int[] branchSizes = null)
+        {
+            SpaceTypes = spaceTypes;
+            NumActions = numActions;
+            BranchSizes = branchSizes;
+        }
+    }
     /// <summary>
     /// Abstraction that facilitates the execution of actions.
     /// </summary>
-    public interface IActuator
+    public interface IActuator : IActionReceiver
     {
-        float[] Actions
+        ArraySegment<float> Actions
         {
             get;
         }
 
-        void UpdateActions(float[] fullActionBuffer, int offset);
-
-        /// <summary>
-        /// Get the number of actions this IActuator will execute on.
-        /// </summary>
-        int GetNumberOfActions();
-
-        /// <summary>
-        /// Get the sizes of each discrete branch if they exist.  The length of this
-        /// array is equal to what is returned from <see cref="GetNumberOfActions"/>.
-        /// </summary>
-        /// <returns></returns>
-        int[] GetBranchSizes();
-
-        void ResetData();
-
-        /// <summary>
-        ///  This method is called in order to allow the user execution actions
-        /// with the array of actions passed in.
-        /// </summary>
-        void OnActionReceived();
+        ActuatorSpace GetActuatorSpace();
 
         /// <summary>
         /// Collects masks for discrete actions, please refer to

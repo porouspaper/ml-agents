@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Google.Protobuf.WellKnownTypes;
+using System.Linq;
 using UnityEngine;
 using Unity.Barracuda;
 using Unity.MLAgents.Actuators;
@@ -148,7 +148,7 @@ namespace Unity.MLAgents
         "docs/Learning-Environment-Design-Agents.md")]
     [Serializable]
     [RequireComponent(typeof(BehaviorParameters))]
-    public class Agent : MonoBehaviour, ISerializationCallbackReceiver
+    public class Agent : MonoBehaviour, ISerializationCallbackReceiver, IActionReceiver
     {
         IPolicy m_Brain;
         BehaviorParameters m_PolicyFactory;
@@ -743,10 +743,7 @@ namespace Unity.MLAgents
                 return;
             }
 
-            foreach (var actuator in actuators)
-            {
-                actuator.ResetData();
-            }
+            actuators.ResetData();
         }
 
         /// <summary>
@@ -907,23 +904,9 @@ namespace Unity.MLAgents
 
             // Support legacy OnActionReceived
             var param = m_PolicyFactory.BrainParameters;
-            switch (param.VectorActionSpaceType)
-            {
-                case SpaceType.Continuous:
-                    vectorActuator = new ContinuousVectorActuator(param.VectorActionSize);
-                    break;
-                case SpaceType.Discrete:
-                    vectorActuator = new DiscreteVectorActuator(param.VectorActionSize);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"Unknown SpaceType used:{param.VectorActionSpaceType}");
-            }
-
-            if (vectorActuator != null)
-            {
-                actuators = new ActuatorList(attachedActuators.Length);
-                actuators.Add(vectorActuator);
-            }
+            vectorActuator = new VectorActuator(this, param.VectorActionSize, param.VectorActionSpaceType);
+            actuators = new ActuatorList(attachedActuators.Length);
+            actuators.Add(vectorActuator);
 
             foreach (var actuatorComponent in attachedActuators)
             {
@@ -1164,7 +1147,14 @@ namespace Unity.MLAgents
         /// by the <see cref="BrainParameters"/> of the agent's associated
         /// <see cref="BehaviorParameters"/> component.
         /// </param>
+        [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ArraySegment<float>) instead (UnityUpgradable)")]
         public virtual void OnActionReceived(float[] vectorAction) {}
+
+        public virtual void OnActionReceived(ArraySegment<float> actions)
+        {
+            // Call the original method with float[]
+            OnActionReceived(actions.ToArray());
+        }
 
         /// <summary>
         /// Implement `OnEpisodeBegin()` to set up an Agent instance at the beginning
@@ -1237,7 +1227,6 @@ namespace Unity.MLAgents
             if ((m_RequestAction) && (m_Brain != null))
             {
                 m_RequestAction = false;
-                OnActionReceived(vectorActuator.Actions);
                 actuators.ExecuteActions();
             }
 
