@@ -3,6 +3,7 @@
 using System.Collections;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 
 public class PushAgentBasic : Agent
 {
@@ -127,7 +128,7 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// Moves the agent according to the selected action.
     /// </summary>
-    public void MoveAgent(float[] act)
+    public void MoveAgent(ActionSegment act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
@@ -163,7 +164,7 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.
     /// </summary>
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         // Move the agent using the action.
         MoveAgent(vectorAction);

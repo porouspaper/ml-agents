@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
 public class PyramidAgent : Agent
@@ -30,7 +31,7 @@ public class PyramidAgent : Agent
         }
     }
 
-    public void MoveAgent(float[] act)
+    public void MoveAgent(ActionSegment act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
@@ -55,7 +56,7 @@ public class PyramidAgent : Agent
         m_AgentRb.AddForce(dirToGo * 2f, ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         AddReward(-1f / MaxStep);
         MoveAgent(vectorAction);

@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Linq;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using UnityEngine.Serialization;
 
 public class GridAgent : Agent
@@ -67,7 +68,7 @@ public class GridAgent : Agent
     }
 
     // to be implemented by the developer
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         AddReward(-0.01f);
         var action = Mathf.FloorToInt(vectorAction[0]);

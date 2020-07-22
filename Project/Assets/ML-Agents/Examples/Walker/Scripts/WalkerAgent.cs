@@ -2,6 +2,7 @@ using System;
 using MLAgentsExamples;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgentsExamples;
 using Unity.MLAgents.Sensors;
 using BodyPart = Unity.MLAgentsExamples.BodyPart;
@@ -128,7 +129,7 @@ public class WalkerAgent : Agent
         }
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         var bpDict = m_JdController.bodyPartsDict;
         var i = -1;

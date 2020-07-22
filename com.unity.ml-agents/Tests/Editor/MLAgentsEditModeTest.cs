@@ -3,6 +3,7 @@ using UnityEngine;
 using NUnit.Framework;
 using System.Reflection;
 using System.Collections.Generic;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Sensors.Reflection;
 using Unity.MLAgents.Policies;
@@ -85,7 +86,7 @@ namespace Unity.MLAgents.Tests
             sensor.AddObservation(collectObservationsCallsForEpisode);
         }
 
-        public override void OnActionReceived(float[] vectorAction)
+        public override void OnActionReceived(ActionSegment vectorAction)
         {
             agentActionCalls += 1;
             agentActionCallsForEpisode += 1;

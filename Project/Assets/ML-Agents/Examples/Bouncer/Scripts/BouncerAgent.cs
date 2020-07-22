@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
 public class BouncerAgent : Agent
@@ -32,12 +33,12 @@ public class BouncerAgent : Agent
         sensor.AddObservation(target.transform.localPosition);
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
-        for (var i = 0; i < vectorAction.Length; i++)
-        {
-            vectorAction[i] = Mathf.Clamp(vectorAction[i], -1f, 1f);
-        }
+        // for (var i = 0; i < vectorAction.Length; i++)
+        // {
+        //     vectorAction[i] = Mathf.Clamp(vectorAction[i], -1f, 1f);
+        // }
         var x = vectorAction[0];
         var y = ScaleAction(vectorAction[1], 0, 1);
         var z = vectorAction[2];

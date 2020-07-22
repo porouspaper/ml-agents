@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
 public class Ball3DHardAgent : Agent
@@ -23,7 +24,7 @@ public class Ball3DHardAgent : Agent
         sensor.AddObservation((ball.transform.position - gameObject.transform.position));
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         var actionZ = 2f * Mathf.Clamp(vectorAction[0], -1f, 1f);
         var actionX = 2f * Mathf.Clamp(vectorAction[1], -1f, 1f);

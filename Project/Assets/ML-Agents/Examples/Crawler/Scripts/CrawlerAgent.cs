@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgentsExamples;
 using Unity.MLAgents.Sensors;
 using Random = UnityEngine.Random;
@@ -128,7 +129,7 @@ public class CrawlerAgent : Agent
         AddReward(1f);
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         // The dictionary with all the body parts in it are in the jdController
         var bpDict = m_JdController.bodyPartsDict;

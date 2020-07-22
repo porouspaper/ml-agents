@@ -148,7 +148,7 @@ namespace Unity.MLAgents
         "docs/Learning-Environment-Design-Agents.md")]
     [Serializable]
     [RequireComponent(typeof(BehaviorParameters))]
-    public class Agent : MonoBehaviour, ISerializationCallbackReceiver, IActionReceiver
+    public class Agent : MonoBehaviour, ISerializationCallbackReceiver, IActionReceiver, IDiscreteActionMaskProvider
     {
         IPolicy m_Brain;
         BehaviorParameters m_PolicyFactory;
@@ -282,6 +282,12 @@ namespace Unity.MLAgents
         /// with the current behavior of Agent.
         /// </summary>
         internal IActuator vectorActuator;
+
+        /// <summary>
+        /// This is used to avoid allocation of a float array every frame if users are still using the old
+        /// OnActionReceived method.
+        /// </summary>
+        float[] m_LegacyActionCache;
 
         /// <summary>
         /// Called when the attached [GameObject] becomes enabled and active.
@@ -601,7 +607,7 @@ namespace Unity.MLAgents
         /// Use <see cref="AddReward(float)"/> to incrementally change the reward rather than
         /// overriding it.
         ///
-        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(float[])"/>
+        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(ActionSegment)"/>
         /// implementation after carrying out the received action and evaluating its success.
         ///
         /// Rewards are used during reinforcement learning; they are ignored during inference.
@@ -631,7 +637,7 @@ namespace Unity.MLAgents
         /// set the reward assigned to the current step with a specific value rather than
         /// increasing or decreasing it.
         ///
-        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(float[])"/>
+        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(ActionSegment)"/>
         /// implementation after carrying out the received action and evaluating its success.
         ///
         /// Rewards are used during reinforcement learning; they are ignored during inference.
@@ -708,7 +714,7 @@ namespace Unity.MLAgents
         /// <remarks>
         /// Call `RequestAction()` to repeat the previous action returned by the agent's
         /// most recent decision. A new decision is not requested. When you call this function,
-        /// the Agent instance invokes <seealso cref="OnActionReceived(float[])"/> with the
+        /// the Agent instance invokes <seealso cref="OnActionReceived(ActionSegment)"/> with the
         /// existing action vector.
         ///
         /// You can use `RequestAction()` in situations where an agent must take an action
@@ -775,7 +781,7 @@ namespace Unity.MLAgents
         /// The same array will be reused between steps. It is up to the user to initialize
         /// the values on each call, for example by calling `Array.Clear(actionsOut, 0, actionsOut.Length);`.
         /// Add values to the array at the same indexes as they are used in your
-        /// <seealso cref="OnActionReceived(float[])"/> function, which receives this array and
+        /// <seealso cref="OnActionReceived(ActionSegment)"/> function, which receives this array and
         /// implements the corresponding agent behavior. See [Actions] for more information
         /// about agent actions.
         /// Note : Do not create a new float array of action in the `Heuristic()` method,
@@ -818,7 +824,7 @@ namespace Unity.MLAgents
         /// [Input System package]: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/manual/index.html
         /// </example>
         /// <param name="actionsOut">Array for the output actions.</param>
-        /// <seealso cref="OnActionReceived(float[])"/>
+        /// <seealso cref="OnActionReceived(ActionSegment)"/>
         public virtual void Heuristic(float[] actionsOut)
         {
             Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
@@ -905,7 +911,9 @@ namespace Unity.MLAgents
             // Support legacy OnActionReceived
             var param = m_PolicyFactory.BrainParameters;
             vectorActuator = new VectorActuator(this, param.VectorActionSize, param.VectorActionSpaceType);
-            actuators = new ActuatorList(attachedActuators.Length);
+            actuators = new ActuatorList(attachedActuators.Length + 1);
+            m_LegacyActionCache = new float[vectorActuator.GetActuatorSpace().NumActions];
+
             actuators.Add(vectorActuator);
 
             foreach (var actuatorComponent in attachedActuators)
@@ -1072,9 +1080,14 @@ namespace Unity.MLAgents
         ///
         /// [Agents - Actions]: https://github.com/Unity-Technologies/ml-agents/blob/release_5_docs/docs/Learning-Environment-Design-Agents.md#actions
         /// </remarks>
-        /// <seealso cref="OnActionReceived(float[])"/>
+        /// <seealso cref="OnActionReceived(ActionSegment)"/>
         public virtual void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker)
         {
+        }
+
+        public virtual void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
+        {
+
         }
 
         /// <summary>
@@ -1147,13 +1160,17 @@ namespace Unity.MLAgents
         /// by the <see cref="BrainParameters"/> of the agent's associated
         /// <see cref="BehaviorParameters"/> component.
         /// </param>
-        [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ArraySegment<float>) instead (UnityUpgradable)")]
+        [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ActionSegment) instead.")]
         public virtual void OnActionReceived(float[] vectorAction) {}
 
-        public virtual void OnActionReceived(ArraySegment<float> actions)
+        public virtual void OnActionReceived(ActionSegment actions)
         {
-            // Call the original method with float[]
-            OnActionReceived(actions.ToArray());
+            #pragma warning disable CS0618
+            // Copy the actions into our local array and call the original method for
+            // backward compatibility.
+            Array.Copy(actions.Array, actions.Offset, m_LegacyActionCache, 0, actions.Length);
+            OnActionReceived(m_LegacyActionCache);
+            #pragma warning restore CS0618
         }
 
         /// <summary>
@@ -1170,7 +1187,7 @@ namespace Unity.MLAgents
         /// <returns>
         /// The last action that was decided by the Agent (or null if no decision has been made).
         /// </returns>
-        /// <seealso cref="OnActionReceived(float[])"/>
+        /// <seealso cref="OnActionReceived(ActionSegment)"/>
         public float[] GetAction()
         {
             return actuators.StoredActions;

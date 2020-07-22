@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
 public class ReacherAgent : Agent
@@ -61,7 +62,7 @@ public class ReacherAgent : Agent
     /// <summary>
     /// The agent's four actions correspond to torques on each of the two joints.
     /// </summary>
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         m_GoalDegree += m_GoalSpeed;
         UpdateGoalPosition();

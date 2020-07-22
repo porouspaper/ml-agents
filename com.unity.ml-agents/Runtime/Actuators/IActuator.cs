@@ -1,5 +1,9 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.MLAgents.Inference;
 using Unity.MLAgents.Policies;
+using UnityEngine;
 
 namespace Unity.MLAgents.Actuators
 {
@@ -39,12 +43,13 @@ namespace Unity.MLAgents.Actuators
             BranchSizes = branchSizes;
         }
     }
+
     /// <summary>
     /// Abstraction that facilitates the execution of actions.
     /// </summary>
-    public interface IActuator : IActionReceiver
+    public interface IActuator : IActionReceiver, IDiscreteActionMaskProvider
     {
-        ArraySegment<float> Actions
+        ActionSegment Actions
         {
             get;
         }
@@ -52,16 +57,11 @@ namespace Unity.MLAgents.Actuators
         ActuatorSpace GetActuatorSpace();
 
         /// <summary>
-        /// Collects masks for discrete actions, please refer to
-        /// <see cref="Agent.CollectDiscreteActionMasks"/>.
-        /// </summary>
-        /// <param name="actionMasker"></param>
-        void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker);
-
-        /// <summary>
         /// Gets the name of this IActuator which will be used to sort it.
         /// </summary>
         /// <returns></returns>
         string GetName();
+
+        void ResetData();
     }
 }

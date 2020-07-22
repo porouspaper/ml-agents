@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 
 public class AgentSoccer : Agent
@@ -96,7 +97,7 @@ public class AgentSoccer : Agent
         m_ResetParams = Academy.Instance.EnvironmentParameters;
     }
 
-    public void MoveAgent(float[] act)
+    public void MoveAgent(ActionSegment act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
@@ -143,7 +144,7 @@ public class AgentSoccer : Agent
             ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
 
         if (position == Position.Goalie)

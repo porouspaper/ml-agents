@@ -77,7 +77,7 @@ namespace Unity.MLAgents.Actuators
             {
                 var actuator = m_Actuators[i];
                 var numActions = actuator.GetActuatorSpace().NumActions;
-                actuator.OnActionReceived(new ArraySegment<float>(m_Actions, start, numActions));
+                actuator.OnActionReceived(new ActionSegment(m_Actions, start, numActions));
                 start += numActions;
             }
         }
@@ -98,6 +98,10 @@ namespace Unity.MLAgents.Actuators
         public void ResetData()
         {
             Array.Clear(m_Actions, 0, m_Actions.Length);
+            for (var i = 0; i < m_Actuators.Count; i++)
+            {
+                m_Actuators[i].ResetData();
+            }
         }
 
         /*********************************************************************************

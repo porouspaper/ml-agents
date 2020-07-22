@@ -1,6 +1,9 @@
+using System;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
+using Random = UnityEngine.Random;
 
 public class FoodCollectorAgent : Agent
 {
@@ -59,7 +62,7 @@ public class FoodCollectorAgent : Agent
         return new Color32(r, g, b, 255);
     }
 
-    public void MoveAgent(float[] act)
+    public void MoveAgent(ActionSegment act)
     {
         m_Shoot = false;
 
@@ -202,7 +205,7 @@ public class FoodCollectorAgent : Agent
         gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         MoveAgent(vectorAction);
     }

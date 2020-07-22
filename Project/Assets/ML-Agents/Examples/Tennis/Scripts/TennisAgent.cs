@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
 public class TennisAgent : Agent
@@ -59,7 +60,7 @@ public class TennisAgent : Agent
         sensor.AddObservation(m_InvertMult * gameObject.transform.rotation.z);
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         var moveX = Mathf.Clamp(vectorAction[0], -1f, 1f) * m_InvertMult;
         var moveY = Mathf.Clamp(vectorAction[1], -1f, 1f);

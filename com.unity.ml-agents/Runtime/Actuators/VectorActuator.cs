@@ -3,7 +3,7 @@ using Unity.MLAgents.Policies;
 
 namespace Unity.MLAgents.Actuators
 {
-    public class VectorActuator : IActuator
+    class VectorActuator : IActuator
     {
         // Easy access for now about which space type to use for business logic.
         // Should be removed once a mixed SpaceType NN is available.
@@ -19,7 +19,7 @@ namespace Unity.MLAgents.Actuators
         {
             m_ActionReceiver = actionReceiver;
             m_SpaceType = spaceType;
-            string suffix = null;
+            string suffix;
             switch (m_SpaceType)
             {
                 case SpaceType.Continuous:
@@ -31,14 +31,14 @@ namespace Unity.MLAgents.Actuators
                     suffix = "-Discrete";
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("spaceType",
+                    throw new ArgumentOutOfRangeException(nameof(spaceType),
                         spaceType,
                         "Unknown enum value.");
             }
             m_Name = name + suffix;
         }
 
-        public ArraySegment<float> Actions { get; private set; }
+        public ActionSegment Actions { get; private set; }
 
         public ActuatorSpace GetActuatorSpace()
         {
@@ -47,16 +47,16 @@ namespace Unity.MLAgents.Actuators
 
         public void ResetData()
         {
-            Actions = new ArraySegment<float>();
+            Actions = new ActionSegment();
         }
 
-        public void OnActionReceived(ArraySegment<float> actions)
+        public void OnActionReceived(ActionSegment actions)
         {
             Actions = actions;
             m_ActionReceiver.OnActionReceived(Actions);
         }
 
-        public void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker)
+        public void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
         {
             if (m_SpaceType == SpaceType.Discrete)
             {

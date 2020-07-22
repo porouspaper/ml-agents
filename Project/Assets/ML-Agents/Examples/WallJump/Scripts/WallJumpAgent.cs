@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.Barracuda;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgentsExamples;
 
@@ -192,7 +193,7 @@ public class WallJumpAgent : Agent
         m_GroundRenderer.material = m_GroundMaterial;
     }
 
-    public void MoveAgent(float[] act)
+    public void MoveAgent(ActionSegment act)
     {
         AddReward(-0.0005f);
         var smallGrounded = DoGroundCheck(true);
@@ -245,7 +246,7 @@ public class WallJumpAgent : Agent
         jumpingTime -= Time.fixedDeltaTime;
     }
 
-    public override void OnActionReceived(float[] vectorAction)
+    public override void OnActionReceived(ActionSegment vectorAction)
     {
         MoveAgent(vectorAction);
         if ((!Physics.Raycast(m_AgentRb.position, Vector3.down, 20))
