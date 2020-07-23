@@ -1107,7 +1107,6 @@ namespace Unity.MLAgents
 
         public virtual void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
         {
-
         }
 
         /// <summary>
@@ -1299,7 +1298,7 @@ namespace Unity.MLAgents
             {
                 ResetData();
             }
-            var action = m_Brain?.DecideAction() ?? (continuousActions: Array.Empty<float>(), discreteActions: Array.Empty<int>());
+            var action = m_Brain?.DecideAction() ?? (continuousActions : Array.Empty<float>(), discreteActions : Array.Empty<int>());
             actuators.UpdateActions(action.continuousActions, action.discreteActions);
         }
     }

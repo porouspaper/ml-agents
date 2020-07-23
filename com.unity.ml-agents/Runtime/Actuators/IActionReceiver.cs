@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Unity.MLAgents.Actuators
 {
     public readonly struct ActionSegment<T> : IEnumerable<T>
-    where T : struct
+        where T : struct
     {
         readonly T[] m_ActionArray;
         public readonly int Offset;
@@ -21,6 +21,7 @@ namespace Unity.MLAgents.Actuators
             }
             return new ActionSegment<T>(actionArray, offset, length);
         }
+
         public ActionSegment(T[] actionArray, int offset, int length)
         {
             m_ActionArray = actionArray;

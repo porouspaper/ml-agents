@@ -12,9 +12,9 @@ namespace Unity.MLAgents.Actuators
         IActionReceiver m_ActionReceiver;
 
         public VectorActuator(IActionReceiver actionReceiver,
-            int[] vectorActionSize,
-            SpaceType spaceType,
-            string name = "VectorActuator")
+                              int[] vectorActionSize,
+                              SpaceType spaceType,
+                              string name = "VectorActuator")
         {
             m_ActionReceiver = actionReceiver;
             m_SpaceType = spaceType;

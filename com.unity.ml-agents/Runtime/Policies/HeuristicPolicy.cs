@@ -37,7 +37,6 @@ namespace Unity.MLAgents.Policies
             StepSensors(sensors);
             m_Done = info.done;
             m_DecisionRequested = true;
-
         }
 
         /// <inheritdoc />
@@ -45,7 +44,7 @@ namespace Unity.MLAgents.Policies
         {
             if (!m_Done && m_DecisionRequested)
             {
-                 m_Heuristic.Invoke(m_LastContinuousDecision, m_LastDiscreteDecision);
+                m_Heuristic.Invoke(m_LastContinuousDecision, m_LastDiscreteDecision);
             }
             m_DecisionRequested = false;
             return (m_LastContinuousDecision, m_LastDiscreteDecision);
@@ -112,7 +111,7 @@ namespace Unity.MLAgents.Policies
             public float this[int index]
             {
                 get { return 0.0f; }
-                set { }
+                set {}
             }
         }
 

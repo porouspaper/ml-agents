@@ -4,7 +4,6 @@ namespace Unity.MLAgents.Actuators
 {
     public interface IDiscreteActionMask
     {
-
         /// <summary>
         /// Modifies an action mask for discrete control agents.
         /// </summary>
