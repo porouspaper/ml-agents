@@ -11,6 +11,16 @@ namespace Unity.MLAgents.Actuators
         public readonly int Offset;
         public readonly int Length;
 
+        public static ActionSegment<T> Empty = new ActionSegment<T>(System.Array.Empty<T>(), 0, 0);
+
+        public static ActionSegment<T> MakeActionSegment(T[] actionArray, int offset, int length)
+        {
+            if (length == 0)
+            {
+                return Empty;
+            }
+            return new ActionSegment<T>(actionArray, offset, length);
+        }
         public ActionSegment(T[] actionArray, int offset, int length)
         {
             m_ActionArray = actionArray;

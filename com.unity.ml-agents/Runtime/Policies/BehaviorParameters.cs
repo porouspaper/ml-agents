@@ -200,7 +200,7 @@ namespace Unity.MLAgents.Policies
             switch (m_BehaviorType)
             {
                 case BehaviorType.HeuristicOnly:
-                    return new HeuristicPolicy(heuristic, m_BrainParameters.NumActions);
+                    return GenerateHeuristicPolicy(heuristic);
                 case BehaviorType.InferenceOnly:
                 {
                     if (m_Model == null)
@@ -224,11 +224,27 @@ namespace Unity.MLAgents.Policies
                     }
                     else
                     {
-                        return new HeuristicPolicy(heuristic, m_BrainParameters.NumActions);
+                        return GenerateHeuristicPolicy(heuristic);
                     }
                 default:
-                    return new HeuristicPolicy(heuristic, m_BrainParameters.NumActions);
+                    return GenerateHeuristicPolicy(heuristic);
             }
+        }
+
+        internal IPolicy GenerateHeuristicPolicy(HeuristicPolicy.ActionGenerator heuristic)
+        {
+            var numContinuousActions = 0;
+            var numDiscreteActions = 0;
+            if (m_BrainParameters.VectorActionSpaceType == SpaceType.Continuous)
+            {
+                numContinuousActions = m_BrainParameters.NumActions;
+            }
+            else if (m_BrainParameters.VectorActionSpaceType == SpaceType.Discrete)
+            {
+                numDiscreteActions = m_BrainParameters.NumActions;
+            }
+
+            return new HeuristicPolicy(heuristic, numContinuousActions, numDiscreteActions);
         }
 
         internal void UpdateAgentPolicy()

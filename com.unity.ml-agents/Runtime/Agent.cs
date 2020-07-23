@@ -831,6 +831,26 @@ namespace Unity.MLAgents
             Array.Clear(actionsOut, 0, actionsOut.Length);
         }
 
+        public virtual void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
+        {
+            Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
+            // For backward compatibility
+            switch (m_PolicyFactory.BrainParameters.VectorActionSpaceType)
+            {
+                case SpaceType.Continuous:
+                    Heuristic(continuousActionsOut);
+                    Array.Clear(discreteActionsOut, 0, discreteActionsOut.Length);
+                    break;
+                case SpaceType.Discrete:
+                    var convertedOut = Array.ConvertAll(discreteActionsOut, x => (float)x);
+                    Heuristic(convertedOut);
+                    var convertedBackToInt = Array.ConvertAll(convertedOut, x => (int)x);
+                    Array.Copy(convertedBackToInt, 0, discreteActionsOut, 0, discreteActionsOut.Length);
+                    Array.Clear(continuousActionsOut, 0, continuousActionsOut.Length);
+                    break;
+            }
+        }
+
         /// <summary>
         /// Set up the list of ISensors on the Agent. By default, this will select any
         /// SensorComponent's attached to the Agent.
@@ -955,9 +975,9 @@ namespace Unity.MLAgents
             {
                 Array.Clear(m_Info.storedVectorActions, 0, m_Info.storedVectorActions.Length);
             }
-            else if (actuators.storedContinuousActions != null)
+            else if (actuators.StoredContinuousActions != null)
             {
-                Array.Copy(actuators.storedContinuousActions, m_Info.storedVectorActions, actuators.storedContinuousActions.Length);
+                Array.Copy(actuators.StoredContinuousActions, m_Info.storedVectorActions, actuators.StoredContinuousActions.Length);
             }
             m_ActionMasker.ResetMask();
             UpdateSensors();
@@ -1199,7 +1219,17 @@ namespace Unity.MLAgents
         /// <seealso cref="OnActionReceived(ActionSegment)"/>
         public float[] GetAction()
         {
-            return actuators.storedContinuousActions;
+            return actuators.StoredContinuousActions;
+        }
+
+        public float[] GetStoredContinuousActions()
+        {
+            return actuators.StoredContinuousActions;
+        }
+
+        public int[] GetStoredDiscreteActions()
+        {
+            return actuators.StoredDiscreteActions;
         }
 
         /// <summary>
@@ -1265,12 +1295,12 @@ namespace Unity.MLAgents
 
         void DecideAction()
         {
-            if (actuators.storedContinuousActions == null)
+            if (actuators.StoredContinuousActions == null)
             {
                 ResetData();
             }
-            var action = m_Brain?.DecideAction();
-            actuators.UpdateActions(action);
+            var action = m_Brain?.DecideAction() ?? (continuousActions: Array.Empty<float>(), discreteActions: Array.Empty<int>());
+            actuators.UpdateActions(action.continuousActions, action.discreteActions);
         }
     }
 }

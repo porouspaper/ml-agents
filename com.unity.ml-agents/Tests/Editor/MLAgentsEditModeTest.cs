@@ -24,7 +24,7 @@ namespace Unity.MLAgents.Tests
             OnRequestDecision?.Invoke();
         }
 
-        public float[] DecideAction() { return new float[0]; }
+        public (float[], int[]) DecideAction() { return (Array.Empty<float>(), Array.Empty<int>()); }
 
         public void Dispose() {}
     }
@@ -694,7 +694,7 @@ namespace Unity.MLAgents.Tests
             Assert.AreEqual(numSteps, agent1.sensor2.numCompressedCalls);
 
             // Make sure the Heuristic method read the observation and set the action
-            Assert.AreEqual(agent1.collectObservationsCallsForEpisode, agent1.GetAction()[0]);
+            Assert.AreEqual(agent1.collectObservationsCallsForEpisode, agent1.GetStoredDiscreteActions()[0]);
         }
     }
 

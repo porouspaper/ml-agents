@@ -47,7 +47,7 @@ public class HallwayAgent : Agent
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
 
-        var action = Mathf.FloorToInt(act[0]);
+        var action = act[0];
         switch (action)
         {
             case 1:

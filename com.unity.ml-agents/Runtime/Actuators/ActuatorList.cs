@@ -27,7 +27,7 @@ namespace Unity.MLAgents.Actuators
         /// <summary>
         /// Returns the previously stored actions for the actuators in this list.
         /// </summary>
-        public float[] storedContinuousActions
+        public float[] StoredContinuousActions
         {
             get { return m_ContinuousActions; }
         }
@@ -35,7 +35,7 @@ namespace Unity.MLAgents.Actuators
         /// <summary>
         /// Returns the previously stored actions for the actuators in this list.
         /// </summary>
-        public int[] storedDiscreteActions
+        public int[] StoredDiscreteActions
         {
             get { return m_DiscreteActions; }
         }
@@ -71,7 +71,7 @@ namespace Unity.MLAgents.Actuators
             else if (m_DiscreteActions.Length > 0)
             {
                 UpdateActions(Array.Empty<float>(),
-                    Array.ConvertAll(fullActionBuffer,
+                    Array.ConvertAll(fullActionBuffer ?? Array.Empty<float>(),
                         x => (int)x));
             }
         }
@@ -81,7 +81,9 @@ namespace Unity.MLAgents.Actuators
         /// passed in is null, the local action buffer will be cleared.
         /// </summary>
         /// <param name="continuousActionBuffer">The action buffer which contains all of the
-        /// actions for the IActuators in this list.</param>
+        /// continuous actions for the IActuators in this list.</param>
+        /// <param name="discreteActionBuffer">The action buffer which contains all of the
+        /// discrete actions for the IActuators in this list.</param>
         public void UpdateActions(float[] continuousActionBuffer, int[] discreteActionBuffer)
         {
             UpdateActionArray(continuousActionBuffer, m_ContinuousActions);
@@ -90,7 +92,7 @@ namespace Unity.MLAgents.Actuators
 
         static void UpdateActionArray<T>(T[] sourceActionBuffer, T[] destination)
         {
-            if (sourceActionBuffer == null)
+            if (sourceActionBuffer == null || sourceActionBuffer.Length == 0)
             {
                 Array.Clear(destination, 0, destination.Length);
             }
@@ -116,8 +118,24 @@ namespace Unity.MLAgents.Actuators
                 var actuator = m_Actuators[i];
                 var numContinuousActions = actuator.ContinuousActuatorSpace.NumActions;
                 var numDiscreteActions = actuator.DiscreteActuatorSpace.NumActions;
-                var continuousActions = new ActionSegment<float>(m_ContinuousActions, continuousStart, numContinuousActions);
-                var discreteActions = new ActionSegment<int>(m_DiscreteActions, discreteStart, numDiscreteActions);
+
+                var continuousActions = ActionSegment<float>.Empty;
+                if (numContinuousActions > 0)
+                {
+                    continuousActions = new ActionSegment<float>(m_ContinuousActions,
+                        continuousStart,
+                        numContinuousActions);
+
+                }
+
+                var discreteActions = ActionSegment<int>.Empty;
+                if (numDiscreteActions > 0)
+                {
+                    discreteActions = new ActionSegment<int>(m_DiscreteActions,
+                        discreteStart,
+                        numDiscreteActions);
+
+                }
 
                 actuator.OnActionReceived(continuousActions, discreteActions);
                 continuousStart += numContinuousActions;

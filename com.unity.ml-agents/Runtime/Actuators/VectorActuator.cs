@@ -23,7 +23,7 @@ namespace Unity.MLAgents.Actuators
             {
                 case SpaceType.Continuous:
                     ContinuousActuatorSpace = ActuatorSpace.MakeContinuous(vectorActionSize[0]);
-                    DiscreteActuatorSpace = ActuatorSpace.MakeDiscrete(new[] {0});
+                    DiscreteActuatorSpace = ActuatorSpace.MakeDiscrete(Array.Empty<int>());
                     suffix = "-Continuous";
                     break;
                 case SpaceType.Discrete:
