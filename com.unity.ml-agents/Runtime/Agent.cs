@@ -714,7 +714,7 @@ namespace Unity.MLAgents
         /// <remarks>
         /// Call `RequestAction()` to repeat the previous action returned by the agent's
         /// most recent decision. A new decision is not requested. When you call this function,
-        /// the Agent instance invokes <seealso cref="OnActionReceived(ActionSegment)"/> with the
+        /// the Agent instance invokes <seealso cref="IActionReceiver.OnActionReceived"/> with the
         /// existing action vector.
         ///
         /// You can use `RequestAction()` in situations where an agent must take an action
@@ -769,6 +769,13 @@ namespace Unity.MLAgents
         /// </remarks>
         public virtual void Initialize() {}
 
+        [Obsolete("The Heuristic(float[]) method has been deprecated.  Please use Heuristic(float[], int[]) instead.")]
+        public virtual void Heuristic(float[] continuousActionsOut)
+        {
+            Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
+            Array.Clear(continuousActionsOut, 0, continuousActionsOut.Length);
+        }
+
         /// <summary>
         /// Implement `Heuristic()` to choose an action for this agent using a custom heuristic.
         /// </summary>
@@ -781,7 +788,7 @@ namespace Unity.MLAgents
         /// The same array will be reused between steps. It is up to the user to initialize
         /// the values on each call, for example by calling `Array.Clear(actionsOut, 0, actionsOut.Length);`.
         /// Add values to the array at the same indexes as they are used in your
-        /// <seealso cref="OnActionReceived(ActionSegment)"/> function, which receives this array and
+        /// <seealso cref="IActionReceiver.OnActionReceived"/> function, which receives this array and
         /// implements the corresponding agent behavior. See [Actions] for more information
         /// about agent actions.
         /// Note : Do not create a new float array of action in the `Heuristic()` method,
@@ -813,25 +820,19 @@ namespace Unity.MLAgents
         /// You can also use the [Input System package], which provides a more flexible and
         /// configurable input system.
         /// <code>
-        ///     public override void Heuristic(float[] actionsOut)
+        ///     public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
         ///     {
-        ///         actionsOut[0] = Input.GetAxis("Horizontal");
-        ///         actionsOut[1] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
-        ///         actionsOut[2] = Input.GetAxis("Vertical");
+        ///         continuousActions[0] = Input.GetAxis("Horizontal");
+        ///         continuousActions[1] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+        ///         continuousActions[2] = Input.GetAxis("Vertical");
         ///     }
         /// </code>
         /// [Input Manager]: https://docs.unity3d.com/Manual/class-InputManager.html
         /// [Input System package]: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/manual/index.html
         /// </example>
-        /// <param name="continuousActionsOut">Array for the output actions.</param>
-        /// <seealso cref="OnActionReceived(ActionSegment)"/>
-        [Obsolete("The Heuristic(float[]) method has been deprecated.  Please use Heuristic(float[], int[]) instead.")]
-        public virtual void Heuristic(float[] continuousActionsOut)
-        {
-            Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
-            Array.Clear(continuousActionsOut, 0, continuousActionsOut.Length);
-        }
-
+        /// <param name="continuousActionsOut">Array to write the continuous actions to.</param>
+        /// <param name="discreteActionsOut">Array to write the discreteActions to.</param>
+        /// <seealso cref="IActionReceiver.OnActionReceived"/>
         public virtual void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
         {
             Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
@@ -1105,7 +1106,7 @@ namespace Unity.MLAgents
         ///
         /// [Agents - Actions]: https://github.com/Unity-Technologies/ml-agents/blob/release_5_docs/docs/Learning-Environment-Design-Agents.md#actions
         /// </remarks>
-        /// <seealso cref="OnActionReceived(ActionSegment)"/>
+        /// <seealso cref="IActionReceiver.OnActionReceived"/>
         public virtual void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker)
         {
         }
@@ -1113,6 +1114,9 @@ namespace Unity.MLAgents
         public virtual void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
         {
         }
+
+        [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ActionSegment) instead.")]
+        public virtual void OnActionReceived(float[] vectorAction) {}
 
         /// <summary>
         /// Implement `OnActionReceived()` to specify agent behavior at every step, based
@@ -1129,7 +1133,7 @@ namespace Unity.MLAgents
         /// three values in the action array to use as the force components. During
         /// training, the agent's  policy learns to set those particular elements of
         /// the array to maximize the training rewards the agent receives. (Of course,
-        /// if you implement a <seealso cref="Heuristic"/> function, it must use the same
+        /// if you implement a <seealso cref="Heuristic(float[])"/> function, it must use the same
         /// elements of the action array for the same purpose since there is no learning
         /// involved.)
         ///
@@ -1179,14 +1183,16 @@ namespace Unity.MLAgents
         ///
         /// [Agents - Actions]: https://github.com/Unity-Technologies/ml-agents/blob/release_5_docs/docs/Learning-Environment-Design-Agents.md#actions
         /// </remarks>
-        /// <param name="vectorAction">
-        /// An array containing the action vector. The length of the array is specified
+        /// <param name="continuousActions">
+        /// An array containing the continuous action vector. The length of the array is specified
         /// by the <see cref="BrainParameters"/> of the agent's associated
         /// <see cref="BehaviorParameters"/> component.
         /// </param>
-        [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ActionSegment) instead.")]
-        public virtual void OnActionReceived(float[] vectorAction) {}
-
+        /// <param name="discreteActions">
+        /// An array containing the discrete action vector. The length of the array is specified
+        /// by the <see cref="BrainParameters"/> of the agent's associated
+        /// <see cref="BehaviorParameters"/> component.
+        /// </param>
         public virtual void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
         {
             #pragma warning disable CS0618
