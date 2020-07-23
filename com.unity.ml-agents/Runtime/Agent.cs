@@ -912,7 +912,7 @@ namespace Unity.MLAgents
             var param = m_PolicyFactory.BrainParameters;
             vectorActuator = new VectorActuator(this, param.VectorActionSize, param.VectorActionSpaceType);
             actuators = new ActuatorList(attachedActuators.Length + 1);
-            m_LegacyActionCache = new float[vectorActuator.GetActuatorSpace().NumActions];
+            m_LegacyActionCache = new float[vectorActuator.TotalNumberOfActions];
 
             actuators.Add(vectorActuator);
 
@@ -955,9 +955,9 @@ namespace Unity.MLAgents
             {
                 Array.Clear(m_Info.storedVectorActions, 0, m_Info.storedVectorActions.Length);
             }
-            else if (actuators.StoredActions != null)
+            else if (actuators.storedContinuousActions != null)
             {
-                Array.Copy(actuators.StoredActions, m_Info.storedVectorActions, actuators.StoredActions.Length);
+                Array.Copy(actuators.storedContinuousActions, m_Info.storedVectorActions, actuators.storedContinuousActions.Length);
             }
             m_ActionMasker.ResetMask();
             UpdateSensors();
@@ -1163,12 +1163,21 @@ namespace Unity.MLAgents
         [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ActionSegment) instead.")]
         public virtual void OnActionReceived(float[] vectorAction) {}
 
-        public virtual void OnActionReceived(ActionSegment actions)
+        public virtual void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
         {
             #pragma warning disable CS0618
             // Copy the actions into our local array and call the original method for
             // backward compatibility.
-            Array.Copy(actions.Array, actions.Offset, m_LegacyActionCache, 0, actions.Length);
+            // For now we need to check which array has the actions in them in order to pass it back to the old method.
+            if (continuousActions.Length > 0)
+            {
+                Array.Copy(continuousActions.Array, continuousActions.Offset, m_LegacyActionCache, 0, continuousActions.Length);
+            }
+            else if (discreteActions.Length > 0)
+            {
+                Array.Copy(discreteActions.Array, discreteActions.Offset, m_LegacyActionCache, 0, discreteActions.Length);
+            }
+
             OnActionReceived(m_LegacyActionCache);
             #pragma warning restore CS0618
         }
@@ -1190,7 +1199,7 @@ namespace Unity.MLAgents
         /// <seealso cref="OnActionReceived(ActionSegment)"/>
         public float[] GetAction()
         {
-            return actuators.StoredActions;
+            return actuators.storedContinuousActions;
         }
 
         /// <summary>
@@ -1256,7 +1265,7 @@ namespace Unity.MLAgents
 
         void DecideAction()
         {
-            if (actuators.StoredActions == null)
+            if (actuators.storedContinuousActions == null)
             {
                 ResetData();
             }

@@ -42,7 +42,7 @@ public class HallwayAgent : Agent
         m_GroundRenderer.material = m_GroundMaterial;
     }
 
-    public void MoveAgent(ActionSegment act)
+    public void MoveAgent(ActionSegment<int> act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
@@ -67,10 +67,10 @@ public class HallwayAgent : Agent
         m_AgentRb.AddForce(dirToGo * m_HallwaySettings.agentRunSpeed, ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         AddReward(-1f / MaxStep);
-        MoveAgent(vectorAction);
+        MoveAgent(discreteActions);
     }
 
     void OnCollisionEnter(Collision col)

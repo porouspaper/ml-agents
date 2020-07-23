@@ -33,21 +33,21 @@ public class BouncerAgent : Agent
         sensor.AddObservation(target.transform.localPosition);
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         // for (var i = 0; i < vectorAction.Length; i++)
         // {
         //     vectorAction[i] = Mathf.Clamp(vectorAction[i], -1f, 1f);
         // }
-        var x = vectorAction[0];
-        var y = ScaleAction(vectorAction[1], 0, 1);
-        var z = vectorAction[2];
+        var x = continuousActions[0];
+        var y = ScaleAction(continuousActions[1], 0, 1);
+        var z = continuousActions[2];
         m_Rb.AddForce(new Vector3(x, y + 1, z) * strength);
 
         AddReward(-0.05f * (
-            vectorAction[0] * vectorAction[0] +
-            vectorAction[1] * vectorAction[1] +
-            vectorAction[2] * vectorAction[2]) / 3f);
+            continuousActions[0] * continuousActions[0] +
+            continuousActions[1] * continuousActions[1] +
+            continuousActions[2] * continuousActions[2]) / 3f);
 
         m_LookDir = new Vector3(x, y, z);
     }

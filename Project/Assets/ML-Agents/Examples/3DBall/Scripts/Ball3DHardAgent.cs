@@ -24,10 +24,10 @@ public class Ball3DHardAgent : Agent
         sensor.AddObservation((ball.transform.position - gameObject.transform.position));
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
-        var actionZ = 2f * Mathf.Clamp(vectorAction[0], -1f, 1f);
-        var actionX = 2f * Mathf.Clamp(vectorAction[1], -1f, 1f);
+        var actionZ = 2f * Mathf.Clamp(continuousActions[0], -1f, 1f);
+        var actionX = 2f * Mathf.Clamp(continuousActions[1], -1f, 1f);
 
         if ((gameObject.transform.rotation.z < 0.25f && actionZ > 0f) ||
             (gameObject.transform.rotation.z > -0.25f && actionZ < 0f))

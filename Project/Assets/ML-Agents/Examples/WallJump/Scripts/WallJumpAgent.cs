@@ -193,7 +193,7 @@ public class WallJumpAgent : Agent
         m_GroundRenderer.material = m_GroundMaterial;
     }
 
-    public void MoveAgent(ActionSegment act)
+    public void MoveAgent(ActionSegment<int> act)
     {
         AddReward(-0.0005f);
         var smallGrounded = DoGroundCheck(true);
@@ -201,10 +201,10 @@ public class WallJumpAgent : Agent
 
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
-        var dirToGoForwardAction = (int)act[0];
-        var rotateDirAction = (int)act[1];
-        var dirToGoSideAction = (int)act[2];
-        var jumpAction = (int)act[3];
+        var dirToGoForwardAction = act[0];
+        var rotateDirAction = act[1];
+        var dirToGoSideAction = act[2];
+        var jumpAction = act[3];
 
         if (dirToGoForwardAction == 1)
             dirToGo = (largeGrounded ? 1f : 0.5f) * 1f * transform.forward;
@@ -246,9 +246,9 @@ public class WallJumpAgent : Agent
         jumpingTime -= Time.fixedDeltaTime;
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
-        MoveAgent(vectorAction);
+        MoveAgent(discreteActions);
         if ((!Physics.Raycast(m_AgentRb.position, Vector3.down, 20))
             || (!Physics.Raycast(m_ShortBlockRb.position, Vector3.down, 20)))
         {

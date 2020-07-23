@@ -68,10 +68,10 @@ public class GridAgent : Agent
     }
 
     // to be implemented by the developer
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         AddReward(-0.01f);
-        var action = Mathf.FloorToInt(vectorAction[0]);
+        var action = discreteActions[0];
 
         var targetPos = transform.position;
         switch (action)

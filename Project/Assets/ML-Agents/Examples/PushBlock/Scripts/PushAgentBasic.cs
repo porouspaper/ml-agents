@@ -128,12 +128,12 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// Moves the agent according to the selected action.
     /// </summary>
-    public void MoveAgent(ActionSegment act)
+    public void MoveAgent(ActionSegment<int> act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
 
-        var action = Mathf.FloorToInt(act[0]);
+        var action = act[0];
 
         switch (action)
         {
@@ -164,10 +164,10 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.
     /// </summary>
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         // Move the agent using the action.
-        MoveAgent(vectorAction);
+        MoveAgent(discreteActions);
 
         // Penalty given each step to encourage agent to finish task quickly.
         AddReward(-1f / MaxStep);

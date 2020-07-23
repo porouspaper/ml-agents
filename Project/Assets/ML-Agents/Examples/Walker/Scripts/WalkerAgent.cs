@@ -129,41 +129,41 @@ public class WalkerAgent : Agent
         }
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         var bpDict = m_JdController.bodyPartsDict;
         var i = -1;
 
-        bpDict[chest].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], vectorAction[++i]);
-        bpDict[spine].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], vectorAction[++i]);
+        bpDict[chest].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], continuousActions[++i]);
+        bpDict[spine].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], continuousActions[++i]);
 
-        bpDict[thighL].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], 0);
-        bpDict[thighR].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], 0);
-        bpDict[shinL].SetJointTargetRotation(vectorAction[++i], 0, 0);
-        bpDict[shinR].SetJointTargetRotation(vectorAction[++i], 0, 0);
-        bpDict[footR].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], vectorAction[++i]);
-        bpDict[footL].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], vectorAction[++i]);
+        bpDict[thighL].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);
+        bpDict[thighR].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);
+        bpDict[shinL].SetJointTargetRotation(continuousActions[++i], 0, 0);
+        bpDict[shinR].SetJointTargetRotation(continuousActions[++i], 0, 0);
+        bpDict[footR].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], continuousActions[++i]);
+        bpDict[footL].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], continuousActions[++i]);
 
-        bpDict[armL].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], 0);
-        bpDict[armR].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], 0);
-        bpDict[forearmL].SetJointTargetRotation(vectorAction[++i], 0, 0);
-        bpDict[forearmR].SetJointTargetRotation(vectorAction[++i], 0, 0);
-        bpDict[head].SetJointTargetRotation(vectorAction[++i], vectorAction[++i], 0);
+        bpDict[armL].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);
+        bpDict[armR].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);
+        bpDict[forearmL].SetJointTargetRotation(continuousActions[++i], 0, 0);
+        bpDict[forearmR].SetJointTargetRotation(continuousActions[++i], 0, 0);
+        bpDict[head].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);
 
         //update joint strength settings
-        bpDict[chest].SetJointStrength(vectorAction[++i]);
-        bpDict[spine].SetJointStrength(vectorAction[++i]);
-        bpDict[head].SetJointStrength(vectorAction[++i]);
-        bpDict[thighL].SetJointStrength(vectorAction[++i]);
-        bpDict[shinL].SetJointStrength(vectorAction[++i]);
-        bpDict[footL].SetJointStrength(vectorAction[++i]);
-        bpDict[thighR].SetJointStrength(vectorAction[++i]);
-        bpDict[shinR].SetJointStrength(vectorAction[++i]);
-        bpDict[footR].SetJointStrength(vectorAction[++i]);
-        bpDict[armL].SetJointStrength(vectorAction[++i]);
-        bpDict[forearmL].SetJointStrength(vectorAction[++i]);
-        bpDict[armR].SetJointStrength(vectorAction[++i]);
-        bpDict[forearmR].SetJointStrength(vectorAction[++i]);
+        bpDict[chest].SetJointStrength(continuousActions[++i]);
+        bpDict[spine].SetJointStrength(continuousActions[++i]);
+        bpDict[head].SetJointStrength(continuousActions[++i]);
+        bpDict[thighL].SetJointStrength(continuousActions[++i]);
+        bpDict[shinL].SetJointStrength(continuousActions[++i]);
+        bpDict[footL].SetJointStrength(continuousActions[++i]);
+        bpDict[thighR].SetJointStrength(continuousActions[++i]);
+        bpDict[shinR].SetJointStrength(continuousActions[++i]);
+        bpDict[footR].SetJointStrength(continuousActions[++i]);
+        bpDict[armL].SetJointStrength(continuousActions[++i]);
+        bpDict[forearmL].SetJointStrength(continuousActions[++i]);
+        bpDict[armR].SetJointStrength(continuousActions[++i]);
+        bpDict[forearmR].SetJointStrength(continuousActions[++i]);
     }
 
     void FixedUpdate()

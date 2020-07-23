@@ -31,7 +31,7 @@ public class PyramidAgent : Agent
         }
     }
 
-    public void MoveAgent(ActionSegment act)
+    public void MoveAgent(ActionSegment<int> act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
@@ -56,10 +56,10 @@ public class PyramidAgent : Agent
         m_AgentRb.AddForce(dirToGo * 2f, ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         AddReward(-1f / MaxStep);
-        MoveAgent(vectorAction);
+        MoveAgent(discreteActions);
     }
 
     public override void Heuristic(float[] actionsOut)

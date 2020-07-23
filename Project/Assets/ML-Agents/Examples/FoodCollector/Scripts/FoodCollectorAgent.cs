@@ -62,7 +62,7 @@ public class FoodCollectorAgent : Agent
         return new Color32(r, g, b, 255);
     }
 
-    public void MoveAgent(ActionSegment act)
+    public void MoveAgent(ActionSegment<int> act)
     {
         m_Shoot = false;
 
@@ -205,9 +205,9 @@ public class FoodCollectorAgent : Agent
         gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
-        MoveAgent(vectorAction);
+        MoveAgent(discreteActions);
     }
 
     public override void Heuristic(float[] actionsOut)

@@ -62,17 +62,17 @@ public class ReacherAgent : Agent
     /// <summary>
     /// The agent's four actions correspond to torques on each of the two joints.
     /// </summary>
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
         m_GoalDegree += m_GoalSpeed;
         UpdateGoalPosition();
 
-        var torqueX = Mathf.Clamp(vectorAction[0], -1f, 1f) * 150f;
-        var torqueZ = Mathf.Clamp(vectorAction[1], -1f, 1f) * 150f;
+        var torqueX = Mathf.Clamp(continuousActions[0], -1f, 1f) * 150f;
+        var torqueZ = Mathf.Clamp(continuousActions[1], -1f, 1f) * 150f;
         m_RbA.AddTorque(new Vector3(torqueX, 0f, torqueZ));
 
-        torqueX = Mathf.Clamp(vectorAction[2], -1f, 1f) * 150f;
-        torqueZ = Mathf.Clamp(vectorAction[3], -1f, 1f) * 150f;
+        torqueX = Mathf.Clamp(continuousActions[2], -1f, 1f) * 150f;
+        torqueZ = Mathf.Clamp(continuousActions[3], -1f, 1f) * 150f;
         m_RbB.AddTorque(new Vector3(torqueX, 0f, torqueZ));
     }
 

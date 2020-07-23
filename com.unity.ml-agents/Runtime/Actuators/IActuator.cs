@@ -49,12 +49,30 @@ namespace Unity.MLAgents.Actuators
     /// </summary>
     public interface IActuator : IActionReceiver, IDiscreteActionMaskProvider
     {
-        ActionSegment Actions
+        ActionSegment<int> DiscreteActions
         {
             get;
         }
 
-        ActuatorSpace GetActuatorSpace();
+        ActionSegment<float> ContinuousActions
+        {
+            get;
+        }
+
+        int TotalNumberOfActions
+        {
+            get;
+        }
+
+        ActuatorSpace DiscreteActuatorSpace
+        {
+            get;
+        }
+
+        ActuatorSpace ContinuousActuatorSpace
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the name of this IActuator which will be used to sort it.

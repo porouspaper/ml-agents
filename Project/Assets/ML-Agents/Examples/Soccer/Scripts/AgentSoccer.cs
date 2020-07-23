@@ -97,16 +97,16 @@ public class AgentSoccer : Agent
         m_ResetParams = Academy.Instance.EnvironmentParameters;
     }
 
-    public void MoveAgent(ActionSegment act)
+    public void MoveAgent(ActionSegment<int> act)
     {
         var dirToGo = Vector3.zero;
         var rotateDir = Vector3.zero;
 
         m_KickPower = 0f;
 
-        var forwardAxis = (int)act[0];
-        var rightAxis = (int)act[1];
-        var rotateAxis = (int)act[2];
+        var forwardAxis = act[0];
+        var rightAxis = act[1];
+        var rotateAxis = act[2];
 
         switch (forwardAxis)
         {
@@ -144,7 +144,7 @@ public class AgentSoccer : Agent
             ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionSegment vectorAction)
+    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
     {
 
         if (position == Position.Goalie)
@@ -162,7 +162,7 @@ public class AgentSoccer : Agent
             // Existential penalty cumulant for Generic
             timePenalty -= m_Existential;
         }
-        MoveAgent(vectorAction);
+        MoveAgent(discreteActions);
     }
 
     public override void Heuristic(float[] actionsOut)

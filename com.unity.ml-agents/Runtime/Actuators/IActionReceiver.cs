@@ -4,24 +4,26 @@ using System.Collections.Generic;
 
 namespace Unity.MLAgents.Actuators
 {
-    public readonly struct ActionSegment : IEnumerable
+    public readonly struct ActionSegment<T> : IEnumerable<T>
+    where T : struct
     {
-        readonly float[] m_ActionArray;
+        readonly T[] m_ActionArray;
         public readonly int Offset;
         public readonly int Length;
-        public ActionSegment(float[] actionArray, int offset, int length)
+
+        public ActionSegment(T[] actionArray, int offset, int length)
         {
             m_ActionArray = actionArray;
             Offset = offset;
             Length = length;
         }
 
-        public float[] Array
+        public T[] Array
         {
             get { return m_ActionArray; }
         }
 
-        public float this[int index]
+        public T this[int index]
         {
             get
             {
@@ -32,25 +34,26 @@ namespace Unity.MLAgents.Actuators
                 return m_ActionArray[Offset + index];
             }
         }
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            return ((IEnumerable<T>)m_ActionArray).GetEnumerator();
+        }
+
         public IEnumerator GetEnumerator()
         {
             return m_ActionArray.GetEnumerator();
         }
-
-        public float[] ToArray()
-        {
-            var actions = new float[Length];
-            System.Array.Copy(m_ActionArray, Offset, actions, 0, Length);
-            return actions;
-        }
     }
+
     public interface IActionReceiver
     {
         /// <summary>
         ///  This method is called in order to allow the user execution actions
         /// with the array of actions passed in.
         /// </summary>
-        /// <param name="actions">The list of actions to perform.</param>
-        void OnActionReceived(ActionSegment actions);
+        /// <param name="continuousActions">The list of continuous actions to perform.</param>
+        /// <param name="discreteActions">The list of discrete actions to perform.</param>
+        void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions);
     }
 }

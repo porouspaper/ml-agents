@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.PlayerLoop;
 
 namespace Unity.MLAgents.Actuators
 {
@@ -10,7 +11,8 @@ namespace Unity.MLAgents.Actuators
     /// </summary>
     public class ActuatorList : IList<IActuator>
     {
-        float[] m_Actions;
+        float[] m_ContinuousActions;
+        int[] m_DiscreteActions;
         IList<IActuator> m_Actuators;
 
         /// <summary>
@@ -25,9 +27,17 @@ namespace Unity.MLAgents.Actuators
         /// <summary>
         /// Returns the previously stored actions for the actuators in this list.
         /// </summary>
-        public float[] StoredActions
+        public float[] storedContinuousActions
         {
-            get { return m_Actions; }
+            get { return m_ContinuousActions; }
+        }
+
+        /// <summary>
+        /// Returns the previously stored actions for the actuators in this list.
+        /// </summary>
+        public int[] storedDiscreteActions
+        {
+            get { return m_DiscreteActions; }
         }
 
         /// <summary>
@@ -36,33 +46,60 @@ namespace Unity.MLAgents.Actuators
         /// </summary>
         public void EnsureActionBufferSize()
         {
-            var size = 0;
+            var continuousSize = 0;
+            var discreteSize = 0;
             for (var i = 0; i < m_Actuators.Count; i++)
             {
-                size += m_Actuators[i].GetActuatorSpace().NumActions;
+                continuousSize += m_Actuators[i].ContinuousActuatorSpace.NumActions;
+                discreteSize += m_Actuators[i].DiscreteActuatorSpace.NumActions;
             }
 
-            m_Actions = new float[size];
+            m_ContinuousActions = new float[continuousSize];
+            m_DiscreteActions = new int[discreteSize];
+        }
+
+        internal void UpdateActions(float[] fullActionBuffer)
+        {
+            // This method exists as a bridge between the old and the new.
+            // The old is where we treated all actions as a float array.
+            // The new is where we want to treat discrete and continuous actions
+            // as separate buffers and handle them accordingly
+            if (m_ContinuousActions.Length > 0)
+            {
+                UpdateActions(fullActionBuffer, Array.Empty<int>());
+            }
+            else if (m_DiscreteActions.Length > 0)
+            {
+                UpdateActions(Array.Empty<float>(),
+                    Array.ConvertAll(fullActionBuffer,
+                        x => (int)x));
+            }
         }
 
         /// <summary>
         /// Updates the local action buffer with the action buffer passed in.  If the buffer
         /// passed in is null, the local action buffer will be cleared.
         /// </summary>
-        /// <param name="fullActionBuffer">The action buffer which contains all of the
+        /// <param name="continuousActionBuffer">The action buffer which contains all of the
         /// actions for the IActuators in this list.</param>
-        public void UpdateActions(float[] fullActionBuffer)
+        public void UpdateActions(float[] continuousActionBuffer, int[] discreteActionBuffer)
         {
-            if (fullActionBuffer == null)
+            UpdateActionArray(continuousActionBuffer, m_ContinuousActions);
+            UpdateActionArray(discreteActionBuffer, m_DiscreteActions);
+        }
+
+        static void UpdateActionArray<T>(T[] sourceActionBuffer, T[] destination)
+        {
+            if (sourceActionBuffer == null)
             {
-                Array.Clear(m_Actions, 0, m_Actions.Length);
+                Array.Clear(destination, 0, destination.Length);
             }
             else
             {
-                Debug.Assert(fullActionBuffer.Length == m_Actions.Length,
+                Debug.Assert(sourceActionBuffer.Length == destination.Length,
                     "fullActionBuffer is a different size than m_Actions.");
 
-                Array.Copy(fullActionBuffer, m_Actions, m_Actions.Length);
+                Array.Copy(sourceActionBuffer, destination, destination.Length);
             }
         }
 
@@ -72,13 +109,19 @@ namespace Unity.MLAgents.Actuators
         /// </summary>
         public void ExecuteActions()
         {
-            var start = 0;
+            var continuousStart = 0;
+            var discreteStart = 0;
             for (var i = 0; i < m_Actuators.Count; i++)
             {
                 var actuator = m_Actuators[i];
-                var numActions = actuator.GetActuatorSpace().NumActions;
-                actuator.OnActionReceived(new ActionSegment(m_Actions, start, numActions));
-                start += numActions;
+                var numContinuousActions = actuator.ContinuousActuatorSpace.NumActions;
+                var numDiscreteActions = actuator.DiscreteActuatorSpace.NumActions;
+                var continuousActions = new ActionSegment<float>(m_ContinuousActions, continuousStart, numContinuousActions);
+                var discreteActions = new ActionSegment<int>(m_DiscreteActions, discreteStart, numDiscreteActions);
+
+                actuator.OnActionReceived(continuousActions, discreteActions);
+                continuousStart += numContinuousActions;
+                discreteStart += numDiscreteActions;
             }
         }
 
@@ -97,7 +140,8 @@ namespace Unity.MLAgents.Actuators
         /// </summary>
         public void ResetData()
         {
-            Array.Clear(m_Actions, 0, m_Actions.Length);
+            Array.Clear(m_ContinuousActions, 0, m_ContinuousActions.Length);
+            Array.Clear(m_DiscreteActions, 0, m_DiscreteActions.Length);
             for (var i = 0; i < m_Actuators.Count; i++)
             {
                 m_Actuators[i].ResetData();

@@ -10,7 +10,6 @@ namespace Unity.MLAgents.Actuators
         SpaceType m_SpaceType;
         string m_Name;
         IActionReceiver m_ActionReceiver;
-        ActuatorSpace m_ActuatorSpace;
 
         public VectorActuator(IActionReceiver actionReceiver,
             int[] vectorActionSize,
@@ -23,11 +22,13 @@ namespace Unity.MLAgents.Actuators
             switch (m_SpaceType)
             {
                 case SpaceType.Continuous:
-                    m_ActuatorSpace = ActuatorSpace.MakeContinuous(vectorActionSize[0]);
+                    ContinuousActuatorSpace = ActuatorSpace.MakeContinuous(vectorActionSize[0]);
+                    DiscreteActuatorSpace = ActuatorSpace.MakeDiscrete(new[] {0});
                     suffix = "-Continuous";
                     break;
                 case SpaceType.Discrete:
-                    m_ActuatorSpace = ActuatorSpace.MakeDiscrete(vectorActionSize);
+                    DiscreteActuatorSpace = ActuatorSpace.MakeDiscrete(vectorActionSize);
+                    ContinuousActuatorSpace = ActuatorSpace.MakeContinuous(0);
                     suffix = "-Discrete";
                     break;
                 default:
@@ -38,22 +39,17 @@ namespace Unity.MLAgents.Actuators
             m_Name = name + suffix;
         }
 
-        public ActionSegment Actions { get; private set; }
-
-        public ActuatorSpace GetActuatorSpace()
-        {
-            return m_ActuatorSpace;
-        }
-
         public void ResetData()
         {
-            Actions = new ActionSegment();
+            DiscreteActions = new ActionSegment<int>();
+            ContinuousActions = new ActionSegment<float>();
         }
 
-        public void OnActionReceived(ActionSegment actions)
+        public void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
         {
-            Actions = actions;
-            m_ActionReceiver.OnActionReceived(Actions);
+            ContinuousActions = continuousActions;
+            DiscreteActions = discreteActions;
+            m_ActionReceiver.OnActionReceived(ContinuousActions, DiscreteActions);
         }
 
         public void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
@@ -63,6 +59,15 @@ namespace Unity.MLAgents.Actuators
                 // TODO: Call into agent?
             }
         }
+
+        public ActionSegment<int> DiscreteActions { get; private set; }
+        public ActionSegment<float> ContinuousActions { get; private set; }
+        public int TotalNumberOfActions
+        {
+            get { return ContinuousActuatorSpace.NumActions + DiscreteActuatorSpace.NumActions; }
+        }
+        public ActuatorSpace DiscreteActuatorSpace { get; }
+        public ActuatorSpace ContinuousActuatorSpace { get; }
 
         public string GetName()
         {
