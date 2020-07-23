@@ -260,26 +260,26 @@ public class WallJumpAgent : Agent
         }
     }
 
-    public override void Heuristic(float[] actionsOut)
+    public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
     {
-        System.Array.Clear(actionsOut, 0, actionsOut.Length);
+        System.Array.Clear(discreteActionsOut, 0, discreteActionsOut.Length);
         if (Input.GetKey(KeyCode.D))
         {
-            actionsOut[1] = 2f;
+            discreteActionsOut[1] = 2;
         }
         if (Input.GetKey(KeyCode.W))
         {
-            actionsOut[0] = 1f;
+            discreteActionsOut[0] = 1;
         }
         if (Input.GetKey(KeyCode.A))
         {
-            actionsOut[1] = 1f;
+            discreteActionsOut[1] = 1;
         }
         if (Input.GetKey(KeyCode.S))
         {
-            actionsOut[0] = 2f;
+            discreteActionsOut[0] = 2;
         }
-        actionsOut[3] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+        discreteActionsOut[3] = Input.GetKey(KeyCode.Space) ? 1 : 0;
     }
 
     // Detect when the agent hits the goal

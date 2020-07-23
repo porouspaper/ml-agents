@@ -102,11 +102,11 @@ public class BouncerAgent : Agent
         }
     }
 
-    public override void Heuristic(float[] actionsOut)
+    public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
     {
-        actionsOut[0] = Input.GetAxis("Horizontal");
-        actionsOut[1] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
-        actionsOut[2] = Input.GetAxis("Vertical");
+        continuousActionsOut[0] = Input.GetAxis("Horizontal");
+        continuousActionsOut[1] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+        continuousActionsOut[2] = Input.GetAxis("Vertical");
     }
 
     void Update()

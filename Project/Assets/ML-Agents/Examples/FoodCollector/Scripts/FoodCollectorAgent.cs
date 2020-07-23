@@ -210,28 +210,28 @@ public class FoodCollectorAgent : Agent
         MoveAgent(discreteActions);
     }
 
-    public override void Heuristic(float[] actionsOut)
+    public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
     {
-        actionsOut[0] = 0f;
-        actionsOut[1] = 0f;
-        actionsOut[2] = 0f;
+        discreteActionsOut[0] = 0;
+        discreteActionsOut[1] = 0;
+        discreteActionsOut[2] = 0;
         if (Input.GetKey(KeyCode.D))
         {
-            actionsOut[2] = 2f;
+            discreteActionsOut[2] = 2;
         }
         if (Input.GetKey(KeyCode.W))
         {
-            actionsOut[0] = 1f;
+            discreteActionsOut[0] = 1;
         }
         if (Input.GetKey(KeyCode.A))
         {
-            actionsOut[2] = 1f;
+            discreteActionsOut[2] = 1;
         }
         if (Input.GetKey(KeyCode.S))
         {
-            actionsOut[0] = 2f;
+            discreteActionsOut[0] = 2;
         }
-        actionsOut[3] = Input.GetKey(KeyCode.Space) ? 1.0f : 0.0f;
+        discreteActionsOut[3] = Input.GetKey(KeyCode.Space) ? 1 : 0;
     }
 
     public override void OnEpisodeBegin()

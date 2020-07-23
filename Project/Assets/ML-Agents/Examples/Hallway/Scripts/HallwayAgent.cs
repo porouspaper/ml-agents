@@ -92,24 +92,24 @@ public class HallwayAgent : Agent
         }
     }
 
-    public override void Heuristic(float[] actionsOut)
+    public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
     {
-        actionsOut[0] = 0;
+        discreteActionsOut[0] = 0;
         if (Input.GetKey(KeyCode.D))
         {
-            actionsOut[0] = 3;
+            discreteActionsOut[0] = 3;
         }
         else if (Input.GetKey(KeyCode.W))
         {
-            actionsOut[0] = 1;
+            discreteActionsOut[0] = 1;
         }
         else if (Input.GetKey(KeyCode.A))
         {
-            actionsOut[0] = 4;
+            discreteActionsOut[0] = 4;
         }
         else if (Input.GetKey(KeyCode.S))
         {
-            actionsOut[0] = 2;
+            discreteActionsOut[0] = 2;
         }
     }
 

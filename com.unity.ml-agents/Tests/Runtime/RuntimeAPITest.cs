@@ -18,10 +18,10 @@ namespace Tests
         [Observable]
         public float ObservableFloat;
 
-        public override void Heuristic(float[] actionsOut)
+        public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
         {
             numHeuristicCalls++;
-            base.Heuristic(actionsOut);
+            base.Heuristic(continuousActionsOut, discreteActionsOut);
         }
     }
 

@@ -100,10 +100,10 @@ namespace Unity.MLAgents.Tests
             agentActionCallsForEpisode = 0;
         }
 
-        public override void Heuristic(float[] actionsOut)
+        public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
         {
             var obs = GetObservations();
-            actionsOut[0] = obs[0];
+            discreteActionsOut[0] = (int)obs[0];
             heuristicCalls++;
         }
     }

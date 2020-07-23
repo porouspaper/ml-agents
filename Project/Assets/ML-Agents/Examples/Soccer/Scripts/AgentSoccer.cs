@@ -165,35 +165,35 @@ public class AgentSoccer : Agent
         MoveAgent(discreteActions);
     }
 
-    public override void Heuristic(float[] actionsOut)
+    public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
     {
-        Array.Clear(actionsOut, 0, actionsOut.Length);
+        Array.Clear(discreteActionsOut, 0, discreteActionsOut.Length);
         //forward
         if (Input.GetKey(KeyCode.W))
         {
-            actionsOut[0] = 1f;
+            discreteActionsOut[0] = 1;
         }
         if (Input.GetKey(KeyCode.S))
         {
-            actionsOut[0] = 2f;
+            discreteActionsOut[0] = 2;
         }
         //rotate
         if (Input.GetKey(KeyCode.A))
         {
-            actionsOut[2] = 1f;
+            discreteActionsOut[2] = 1;
         }
         if (Input.GetKey(KeyCode.D))
         {
-            actionsOut[2] = 2f;
+            discreteActionsOut[2] = 2;
         }
         //right
         if (Input.GetKey(KeyCode.E))
         {
-            actionsOut[1] = 1f;
+            discreteActionsOut[1] = 1;
         }
         if (Input.GetKey(KeyCode.Q))
         {
-            actionsOut[1] = 2f;
+            discreteActionsOut[1] = 2;
         }
     }
     /// <summary>

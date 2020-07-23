@@ -777,7 +777,7 @@ namespace Unity.MLAgents
         /// control of an agent using keyboard, mouse, or game controller input.
         ///
         /// Your heuristic implementation can use any decision making logic you specify. Assign decision
-        /// values to the float[] array, <paramref name="actionsOut"/>, passed to your function as a parameter.
+        /// values to the float[] array, <paramref name="continuousActionsOut"/>, passed to your function as a parameter.
         /// The same array will be reused between steps. It is up to the user to initialize
         /// the values on each call, for example by calling `Array.Clear(actionsOut, 0, actionsOut.Length);`.
         /// Add values to the array at the same indexes as they are used in your
@@ -823,12 +823,13 @@ namespace Unity.MLAgents
         /// [Input Manager]: https://docs.unity3d.com/Manual/class-InputManager.html
         /// [Input System package]: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/manual/index.html
         /// </example>
-        /// <param name="actionsOut">Array for the output actions.</param>
+        /// <param name="continuousActionsOut">Array for the output actions.</param>
         /// <seealso cref="OnActionReceived(ActionSegment)"/>
-        public virtual void Heuristic(float[] actionsOut)
+        [Obsolete("The Heuristic(float[]) method has been deprecated.  Please use Heuristic(float[], int[]) instead.")]
+        public virtual void Heuristic(float[] continuousActionsOut)
         {
             Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
-            Array.Clear(actionsOut, 0, actionsOut.Length);
+            Array.Clear(continuousActionsOut, 0, continuousActionsOut.Length);
         }
 
         public virtual void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
@@ -838,12 +839,16 @@ namespace Unity.MLAgents
             switch (m_PolicyFactory.BrainParameters.VectorActionSpaceType)
             {
                 case SpaceType.Continuous:
+                    #pragma warning disable CS0618
                     Heuristic(continuousActionsOut);
+                    #pragma warning restore CS0618
                     Array.Clear(discreteActionsOut, 0, discreteActionsOut.Length);
                     break;
                 case SpaceType.Discrete:
                     var convertedOut = Array.ConvertAll(discreteActionsOut, x => (float)x);
+                    #pragma warning disable CS0618
                     Heuristic(convertedOut);
+                    #pragma warning restore CS0618
                     var convertedBackToInt = Array.ConvertAll(convertedOut, x => (int)x);
                     Array.Copy(convertedBackToInt, 0, discreteActionsOut, 0, discreteActionsOut.Length);
                     Array.Clear(continuousActionsOut, 0, continuousActionsOut.Length);

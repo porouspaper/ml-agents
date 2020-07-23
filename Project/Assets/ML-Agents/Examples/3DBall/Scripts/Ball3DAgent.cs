@@ -68,10 +68,10 @@ public class Ball3DAgent : Agent
         SetResetParameters();
     }
 
-    public override void Heuristic(float[] actionsOut)
+    public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)
     {
-        actionsOut[0] = -Input.GetAxis("Horizontal");
-        actionsOut[1] = Input.GetAxis("Vertical");
+        continuousActionsOut[0] = -Input.GetAxis("Horizontal");
+        continuousActionsOut[1] = Input.GetAxis("Vertical");
     }
 
     public void SetBall()
