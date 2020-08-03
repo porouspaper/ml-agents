@@ -86,7 +86,7 @@ namespace Unity.MLAgents.Tests
             sensor.AddObservation(collectObservationsCallsForEpisode);
         }
 
-        public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+        public override void OnActionReceived(ActionBuffers buffers)
         {
             agentActionCalls += 1;
             agentActionCallsForEpisode += 1;

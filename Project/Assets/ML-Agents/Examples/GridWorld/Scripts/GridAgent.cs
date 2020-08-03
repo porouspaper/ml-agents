@@ -35,7 +35,9 @@ public class GridAgent : Agent
         m_ResetParams = Academy.Instance.EnvironmentParameters;
     }
 
+#pragma warning disable 672
     public override void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker)
+#pragma warning restore 672
     {
         // Mask the necessary actions if selected by the user.
         if (maskActions)
@@ -68,10 +70,11 @@ public class GridAgent : Agent
     }
 
     // to be implemented by the developer
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         AddReward(-0.01f);
-        var action = discreteActions[0];
+        var action = actionBuffers.DiscreteActions[0];
 
         var targetPos = transform.position;
         switch (action)

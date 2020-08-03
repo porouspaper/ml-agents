@@ -50,6 +50,17 @@ namespace Unity.MLAgents
         /// to separate between different agents in the environment.
         /// </summary>
         public int episodeId;
+
+        public void ClearActions()
+        {
+            Array.Clear(storedVectorActions, 0, storedVectorActions.Length);
+        }
+
+        public void CopyActions(float[] continuousActions, int[] discreteActions)
+        {
+            Array.Copy(continuousActions, 0, storedVectorActions, 0, continuousActions.Length);
+            Array.Copy(discreteActions, 0, storedVectorActions, continuousActions.Length, discreteActions.Length);
+        }
     }
 
     /// <summary>
@@ -99,7 +110,7 @@ namespace Unity.MLAgents
     /// can only take an action when it touches the ground, so several frames might elapse between
     /// one decision and the need for the next.
     ///
-    /// Use the <see cref="OnActionReceived"/> function to implement the actions your agent can take,
+    /// Use the <see cref="OnActionReceived(float[])"/> function to implement the actions your agent can take,
     /// such as moving to reach a goal or interacting with its environment.
     ///
     /// When you call <see cref="EndEpisode"/> on an agent or the agent reaches its <see cref="MaxStep"/> count,
@@ -148,7 +159,7 @@ namespace Unity.MLAgents
         "docs/Learning-Environment-Design-Agents.md")]
     [Serializable]
     [RequireComponent(typeof(BehaviorParameters))]
-    public class Agent : MonoBehaviour, ISerializationCallbackReceiver, IActionReceiver, IDiscreteActionMaskProvider
+    public partial class Agent : MonoBehaviour, ISerializationCallbackReceiver, IActionReceiver
     {
         IPolicy m_Brain;
         BehaviorParameters m_PolicyFactory;
@@ -274,14 +285,14 @@ namespace Unity.MLAgents
         /// <summary>
         /// List of IActuators that this Agent will delegate actions to if any exist.
         /// </summary>
-        internal ActuatorList actuators;
+        ActuatorManager m_Actuators;
 
         /// <summary>
         /// DiscreteVectorActuator which is used by default if no other sensors exist on this Agent. This VectorSensor will
-        /// delegate its actions to <see cref="OnActionReceived"/> by default in order to keep backward compatibility
+        /// delegate its actions to <see cref="IActionReceiver.OnActionReceived"/> by default in order to keep backward compatibility
         /// with the current behavior of Agent.
         /// </summary>
-        internal IActuator vectorActuator;
+        IActuator m_VectorActuator;
 
         /// <summary>
         /// This is used to avoid allocation of a float array every frame if users are still using the old
@@ -393,7 +404,6 @@ namespace Unity.MLAgents
             m_PolicyFactory = GetComponent<BehaviorParameters>();
 
             m_Info = new AgentInfo();
-            m_Info.storedVectorActions = new float[m_PolicyFactory.BrainParameters.NumActions];
             sensors = new List<ISensor>();
 
             Academy.Instance.AgentIncrementStep += AgentIncrementStep;
@@ -414,6 +424,8 @@ namespace Unity.MLAgents
             {
                 InitializeActuators();
             }
+
+            m_Info.storedVectorActions = new float[m_Actuators.TotalNumberOfActions];
 
             // The first time the Academy resets, all Agents in the scene will be
             // forced to reset through the <see cref="AgentForceReset"/> event.
@@ -607,7 +619,7 @@ namespace Unity.MLAgents
         /// Use <see cref="AddReward(float)"/> to incrementally change the reward rather than
         /// overriding it.
         ///
-        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(ActionSegment)"/>
+        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(float[])"/>
         /// implementation after carrying out the received action and evaluating its success.
         ///
         /// Rewards are used during reinforcement learning; they are ignored during inference.
@@ -637,7 +649,7 @@ namespace Unity.MLAgents
         /// set the reward assigned to the current step with a specific value rather than
         /// increasing or decreasing it.
         ///
-        /// Typically, you assign rewards in the Agent subclass's <see cref="OnActionReceived(ActionSegment)"/>
+        /// Typically, you assign rewards in the Agent subclass's <see cref="IActionReceiver.OnActionReceived"/>
         /// implementation after carrying out the received action and evaluating its success.
         ///
         /// Rewards are used during reinforcement learning; they are ignored during inference.
@@ -741,15 +753,7 @@ namespace Unity.MLAgents
         /// at the end of an episode.
         void ResetData()
         {
-            var param = m_PolicyFactory.BrainParameters;
-            m_ActionMasker = new DiscreteActionMasker(param);
-
-            if (actuators == null)
-            {
-                return;
-            }
-
-            actuators.ResetData();
+            m_Actuators?.ResetData();
         }
 
         /// <summary>
@@ -768,13 +772,6 @@ namespace Unity.MLAgents
         /// [GameObject]: https://docs.unity3d.com/Manual/GameObjects.html
         /// </remarks>
         public virtual void Initialize() {}
-
-        [Obsolete("The Heuristic(float[]) method has been deprecated.  Please use Heuristic(float[], int[]) instead.")]
-        public virtual void Heuristic(float[] continuousActionsOut)
-        {
-            Debug.LogWarning("Heuristic method called but not implemented. Returning placeholder actions.");
-            Array.Clear(continuousActionsOut, 0, continuousActionsOut.Length);
-        }
 
         /// <summary>
         /// Implement `Heuristic()` to choose an action for this agent using a custom heuristic.
@@ -936,29 +933,27 @@ namespace Unity.MLAgents
 
             // Support legacy OnActionReceived
             var param = m_PolicyFactory.BrainParameters;
-            vectorActuator = new VectorActuator(this, param.VectorActionSize, param.VectorActionSpaceType);
-            actuators = new ActuatorList(attachedActuators.Length + 1);
-            m_LegacyActionCache = new float[vectorActuator.TotalNumberOfActions];
+            m_VectorActuator = new VectorActuator(this, param.VectorActionSize, param.VectorActionSpaceType);
+            m_Actuators = new ActuatorManager(attachedActuators.Length + 1);
+            m_LegacyActionCache = new float[m_VectorActuator.TotalNumberOfActions];
 
-            actuators.Add(vectorActuator);
+            m_Actuators.Add(m_VectorActuator);
 
             foreach (var actuatorComponent in attachedActuators)
             {
-                actuators.Add(actuatorComponent.CreateActuator());
+                m_Actuators.Add(actuatorComponent.CreateActuator());
             }
 
-            actuators.EnsureActionBufferSize();
-            // Sort the Actuators by name to ensure determinism
-            actuators.SortActuators();
 #if DEBUG
             // Make sure the names are actually unique
-            for (var i = 0; i < actuators.Count - 1; i++)
-            {
-                Debug.Assert(
-                    !actuators[i].GetName().Equals(actuators[i + 1].GetName()),
-                    "Actuator names must be unique.");
-            }
+            // Make sure all Actuators have the same SpaceType
+            m_Actuators.ValidateActuators();
 #endif
+
+            m_Actuators.EnsureActionBufferSize();
+            // Sort the Actuators by name to ensure determinism
+            m_Actuators.SortActuators();
+
         }
 
         /// <summary>
@@ -979,13 +974,12 @@ namespace Unity.MLAgents
 
             if (m_Info.done)
             {
-                Array.Clear(m_Info.storedVectorActions, 0, m_Info.storedVectorActions.Length);
+                m_Info.ClearActions();
             }
-            else if (actuators.StoredContinuousActions != null)
+            else if (m_Actuators.TotalNumberOfActions > 0)
             {
-                Array.Copy(actuators.StoredContinuousActions, m_Info.storedVectorActions, actuators.StoredContinuousActions.Length);
+                m_Info.CopyActions(m_Actuators.StoredContinuousActions, m_Actuators.StoredDiscreteActions);
             }
-            m_ActionMasker.ResetMask();
             UpdateSensors();
             using (TimerStack.Instance.Scoped("CollectObservations"))
             {
@@ -995,11 +989,11 @@ namespace Unity.MLAgents
             {
                 if (m_PolicyFactory.BrainParameters.VectorActionSpaceType == SpaceType.Discrete)
                 {
-                    CollectDiscreteActionMasks(m_ActionMasker);
+                    m_Actuators.WriteActionMask();
                 }
             }
-            m_Info.discreteActionMasks = m_ActionMasker.GetMask();
 
+            m_Info.discreteActionMasks = m_Actuators.DiscreteActionMask.GetMask();
             m_Info.reward = m_Reward;
             m_Info.done = false;
             m_Info.maxStepReached = false;
@@ -1107,16 +1101,17 @@ namespace Unity.MLAgents
         /// [Agents - Actions]: https://github.com/Unity-Technologies/ml-agents/blob/release_5_docs/docs/Learning-Environment-Design-Agents.md#actions
         /// </remarks>
         /// <seealso cref="IActionReceiver.OnActionReceived"/>
-        public virtual void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker)
-        {
-        }
-
         public virtual void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
         {
+            if (m_ActionMasker == null)
+            {
+                m_ActionMasker = new DiscreteActionMasker(actionMask);
+            }
+            #pragma warning disable 618
+            CollectDiscreteActionMasks(m_ActionMasker);
+            #pragma warning restore 618
         }
 
-        [Obsolete("The OnActionReceived(float[]) method has been deprecated.  Please use OnActionReceived(ActionSegment) instead.")]
-        public virtual void OnActionReceived(float[] vectorAction) {}
 
         /// <summary>
         /// Implement `OnActionReceived()` to specify agent behavior at every step, based
@@ -1183,31 +1178,31 @@ namespace Unity.MLAgents
         ///
         /// [Agents - Actions]: https://github.com/Unity-Technologies/ml-agents/blob/release_5_docs/docs/Learning-Environment-Design-Agents.md#actions
         /// </remarks>
-        /// <param name="continuousActions">
-        /// An array containing the continuous action vector. The length of the array is specified
-        /// by the <see cref="BrainParameters"/> of the agent's associated
-        /// <see cref="BehaviorParameters"/> component.
+        /// <param name="actions">
+        /// Struct containing the buffers of actions to be executed at this step.
         /// </param>
-        /// <param name="discreteActions">
-        /// An array containing the discrete action vector. The length of the array is specified
-        /// by the <see cref="BrainParameters"/> of the agent's associated
-        /// <see cref="BehaviorParameters"/> component.
-        /// </param>
-        public virtual void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+        public virtual void OnActionReceived(ActionBuffers actions)
         {
-            #pragma warning disable CS0618
             // Copy the actions into our local array and call the original method for
             // backward compatibility.
             // For now we need to check which array has the actions in them in order to pass it back to the old method.
-            if (continuousActions.Length > 0)
+            if (actions.ContinuousActions.Length > 0)
             {
-                Array.Copy(continuousActions.Array, continuousActions.Offset, m_LegacyActionCache, 0, continuousActions.Length);
+                Array.Copy(actions.ContinuousActions.Array,
+                    actions.ContinuousActions.Offset,
+                    m_LegacyActionCache,
+                    0,
+                    actions.ContinuousActions.Length);
             }
-            else if (discreteActions.Length > 0)
+            else if (actions.DiscreteActions.Length > 0)
             {
-                Array.Copy(discreteActions.Array, discreteActions.Offset, m_LegacyActionCache, 0, discreteActions.Length);
+                Array.Copy(actions.DiscreteActions.Array,
+                    actions.DiscreteActions.Offset,
+                    m_LegacyActionCache,
+                    0,
+                    actions.DiscreteActions.Length);
             }
-
+            #pragma warning disable CS0618
             OnActionReceived(m_LegacyActionCache);
             #pragma warning restore CS0618
         }
@@ -1220,26 +1215,14 @@ namespace Unity.MLAgents
         /// <seealso cref="EndEpisode"/>
         public virtual void OnEpisodeBegin() {}
 
-        /// <summary>
-        /// Returns the last action that was decided on by the Agent.
-        /// </summary>
-        /// <returns>
-        /// The last action that was decided by the Agent (or null if no decision has been made).
-        /// </returns>
-        /// <seealso cref="OnActionReceived(ActionSegment)"/>
-        public float[] GetAction()
-        {
-            return actuators.StoredContinuousActions;
-        }
-
         public float[] GetStoredContinuousActions()
         {
-            return actuators.StoredContinuousActions;
+            return m_Actuators.StoredContinuousActions;
         }
 
         public int[] GetStoredDiscreteActions()
         {
-            return actuators.StoredDiscreteActions;
+            return m_Actuators.StoredDiscreteActions;
         }
 
         /// <summary>
@@ -1293,7 +1276,7 @@ namespace Unity.MLAgents
             if ((m_RequestAction) && (m_Brain != null))
             {
                 m_RequestAction = false;
-                actuators.ExecuteActions();
+                m_Actuators.ExecuteActions();
             }
 
             if ((m_StepCount >= MaxStep) && (MaxStep > 0))
@@ -1305,12 +1288,12 @@ namespace Unity.MLAgents
 
         void DecideAction()
         {
-            if (actuators.StoredContinuousActions == null)
+            if (m_Actuators.StoredContinuousActions == null)
             {
                 ResetData();
             }
             var action = m_Brain?.DecideAction() ?? (continuousActions : Array.Empty<float>(), discreteActions : Array.Empty<int>());
-            actuators.UpdateActions(action.continuousActions, action.discreteActions);
+            m_Actuators.UpdateActions(action.continuousActions, action.discreteActions);
         }
     }
 }

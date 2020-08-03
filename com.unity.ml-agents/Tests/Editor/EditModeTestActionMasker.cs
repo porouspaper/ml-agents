@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 
 namespace Unity.MLAgents.Tests
@@ -8,20 +11,9 @@ namespace Unity.MLAgents.Tests
         [Test]
         public void Contruction()
         {
-            var bp = new BrainParameters();
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(new List<IActuator>(), 0, 0);
+            var masker = new DiscreteActionMasker(bam);
             Assert.IsNotNull(masker);
-        }
-
-        [Test]
-        public void FailsWithContinuous()
-        {
-            var bp = new BrainParameters();
-            bp.VectorActionSpaceType = SpaceType.Continuous;
-            bp.VectorActionSize = new[] {4};
-            var masker = new DiscreteActionMasker(bp);
-            masker.SetMask(0, new[] {0});
-            Assert.Catch<UnityAgentsException>(() => masker.GetMask());
         }
 
         [Test]
@@ -29,7 +21,8 @@ namespace Unity.MLAgents.Tests
         {
             var bp = new BrainParameters();
             bp.VectorActionSpaceType = SpaceType.Discrete;
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(Array.Empty<int>());
+            var masker = new DiscreteActionMasker(bam);
             var mask = masker.GetMask();
             Assert.IsNull(mask);
         }
@@ -37,10 +30,8 @@ namespace Unity.MLAgents.Tests
         [Test]
         public void FirstBranchMask()
         {
-            var bp = new BrainParameters();
-            bp.VectorActionSpaceType = SpaceType.Discrete;
-            bp.VectorActionSize = new[] {4, 5, 6};
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(new []{4, 5, 6});
+            var masker = new DiscreteActionMasker(bam);
             var mask = masker.GetMask();
             Assert.IsNull(mask);
             masker.SetMask(0, new[] {1, 2, 3});
@@ -56,12 +47,8 @@ namespace Unity.MLAgents.Tests
         [Test]
         public void SecondBranchMask()
         {
-            var bp = new BrainParameters
-            {
-                VectorActionSpaceType = SpaceType.Discrete,
-                VectorActionSize = new[] { 4, 5, 6 }
-            };
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(new []{4, 5, 6});
+            var masker = new DiscreteActionMasker(bam);
             masker.SetMask(1, new[] {1, 2, 3});
             var mask = masker.GetMask();
             Assert.IsFalse(mask[0]);
@@ -76,12 +63,8 @@ namespace Unity.MLAgents.Tests
         [Test]
         public void MaskReset()
         {
-            var bp = new BrainParameters
-            {
-                VectorActionSpaceType = SpaceType.Discrete,
-                VectorActionSize = new[] { 4, 5, 6 }
-            };
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(new []{4, 5, 6});
+            var masker = new DiscreteActionMasker(bam);
             masker.SetMask(1, new[] {1, 2, 3});
             masker.ResetMask();
             var mask = masker.GetMask();
@@ -94,12 +77,8 @@ namespace Unity.MLAgents.Tests
         [Test]
         public void ThrowsError()
         {
-            var bp = new BrainParameters
-            {
-                VectorActionSpaceType = SpaceType.Discrete,
-                VectorActionSize = new[] { 4, 5, 6 }
-            };
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(new []{4, 5, 6});
+            var masker = new DiscreteActionMasker(bam);
 
             Assert.Catch<UnityAgentsException>(
                 () => masker.SetMask(0, new[] {5}));
@@ -118,10 +97,8 @@ namespace Unity.MLAgents.Tests
         [Test]
         public void MultipleMaskEdit()
         {
-            var bp = new BrainParameters();
-            bp.VectorActionSpaceType = SpaceType.Discrete;
-            bp.VectorActionSize = new[] {4, 5, 6};
-            var masker = new DiscreteActionMasker(bp);
+            var bam = new BufferedDiscreteActionMask(new []{4, 5, 6});
+            var masker = new DiscreteActionMasker(bam);
             masker.SetMask(0, new[] {0, 1});
             masker.SetMask(0, new[] {3});
             masker.SetMask(2, new[] {1});

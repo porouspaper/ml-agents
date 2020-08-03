@@ -60,8 +60,10 @@ public class TennisAgent : Agent
         sensor.AddObservation(m_InvertMult * gameObject.transform.rotation.z);
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
+        var continuousActions = actionBuffers.ContinuousActions;
         var moveX = Mathf.Clamp(continuousActions[0], -1f, 1f) * m_InvertMult;
         var moveY = Mathf.Clamp(continuousActions[1], -1f, 1f);
         var rotate = Mathf.Clamp(continuousActions[2], -1f, 1f) * m_InvertMult;

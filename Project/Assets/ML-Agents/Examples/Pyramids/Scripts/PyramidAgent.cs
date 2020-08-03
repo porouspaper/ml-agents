@@ -56,10 +56,11 @@ public class PyramidAgent : Agent
         m_AgentRb.AddForce(dirToGo * 2f, ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         AddReward(-1f / MaxStep);
-        MoveAgent(discreteActions);
+        MoveAgent(actionBuffers.DiscreteActions);
     }
 
     public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)

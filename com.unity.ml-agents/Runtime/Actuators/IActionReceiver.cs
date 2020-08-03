@@ -1,59 +1,15 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Unity.MLAgents.Actuators
 {
-    public readonly struct ActionSegment<T> : IEnumerable<T>
-        where T : struct
+    public struct ActionBuffers
     {
-        readonly T[] m_ActionArray;
-        public readonly int Offset;
-        public readonly int Length;
-
-        public static ActionSegment<T> Empty = new ActionSegment<T>(System.Array.Empty<T>(), 0, 0);
-
-        public static ActionSegment<T> MakeActionSegment(T[] actionArray, int offset, int length)
+        public ActionSegment<float> ContinuousActions { get; internal set; }
+        public ActionSegment<int> DiscreteActions { get; internal set; }
+        public ActionBuffers(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
         {
-            if (length == 0)
-            {
-                return Empty;
-            }
-            return new ActionSegment<T>(actionArray, offset, length);
-        }
-
-        public ActionSegment(T[] actionArray, int offset, int length)
-        {
-            m_ActionArray = actionArray;
-            Offset = offset;
-            Length = length;
-        }
-
-        public T[] Array
-        {
-            get { return m_ActionArray; }
-        }
-
-        public T this[int index]
-        {
-            get
-            {
-                if (index < 0 || index > Length)
-                {
-                    throw new IndexOutOfRangeException($"Index out of bounds, expected a number between 0 and {Length}");
-                }
-                return m_ActionArray[Offset + index];
-            }
-        }
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            return ((IEnumerable<T>)m_ActionArray).GetEnumerator();
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return m_ActionArray.GetEnumerator();
+            ContinuousActions = continuousActions;
+            DiscreteActions = discreteActions;
         }
     }
 
@@ -63,8 +19,27 @@ namespace Unity.MLAgents.Actuators
         ///  This method is called in order to allow the user execution actions
         /// with the array of actions passed in.
         /// </summary>
-        /// <param name="continuousActions">The list of continuous actions to perform.</param>
-        /// <param name="discreteActions">The list of discrete actions to perform.</param>
-        void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions);
+        /// <param name="actionBuffers">The definition of the actuator space which contains the actions
+        /// for the current step.</param>
+        void OnActionReceived(ActionBuffers actionBuffers);
+
+        /// <summary>
+        /// Implement `WriteDiscreteActionMask()` to modify the masks for discrete
+        /// actions. When using discrete actions, the agent will not perform the masked
+        /// action.
+        /// </summary>
+        /// <param name="actionMask">
+        /// The action mask for the agent.
+        /// </param>
+        /// <remarks>
+        /// When using Discrete Control, you can prevent the Agent from using a certain
+        /// action by masking it with <see cref="IDiscreteActionMask.WriteMask"/>.
+        ///
+        /// See [Agents - Actions] for more information on masking actions.
+        ///
+        /// [Agents - Actions]: https://github.com/Unity-Technologies/ml-agents/blob/release_4_docs/docs/Learning-Environment-Design-Agents.md#actions
+        /// </remarks>
+        /// <seealso cref="IActionReceiver.OnActionReceived"/>
+        void WriteDiscreteActionMask(IDiscreteActionMask actionMask);
     }
 }

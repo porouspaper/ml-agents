@@ -18,7 +18,7 @@ namespace Unity.MLAgents.Actuators
         /// </remarks>
         /// <param name="branch">The branch for which the actions will be masked.</param>
         /// <param name="actionIndices">The indices of the masked actions.</param>
-        void SetMask(int branch, IEnumerable<int> actionIndices);
+        void WriteMask(int branch, IEnumerable<int> actionIndices);
 
         /// <summary>
         /// Get the current mask for an agent.
@@ -31,5 +31,7 @@ namespace Unity.MLAgents.Actuators
         /// Resets the current mask for an agent.
         /// </summary>
         void ResetMask();
+
+        int CurrentBranchOffset { get; }
     }
 }

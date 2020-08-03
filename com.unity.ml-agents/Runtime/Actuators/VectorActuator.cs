@@ -7,28 +7,38 @@ namespace Unity.MLAgents.Actuators
     {
         // Easy access for now about which space type to use for business logic.
         // Should be removed once a mixed SpaceType NN is available.
-        SpaceType m_SpaceType;
         string m_Name;
         IActionReceiver m_ActionReceiver;
 
+        ActionBuffers m_ActionBuffers;
+        ActuatorSpace m_ActuatorSpace;
+
+        public ActuatorSpace ActuatorSpace
+        {
+            get => m_ActuatorSpace;
+            private set => m_ActuatorSpace = value;
+        }
+
         public VectorActuator(IActionReceiver actionReceiver,
-                              int[] vectorActionSize,
-                              SpaceType spaceType,
-                              string name = "VectorActuator")
+            int[] vectorActionSize,
+            SpaceType spaceType,
+            string name = "VectorActuator")
         {
             m_ActionReceiver = actionReceiver;
-            m_SpaceType = spaceType;
+            ActionSpaceType = spaceType;
+            ActuatorSpace = new ActuatorSpace();
             string suffix;
-            switch (m_SpaceType)
+            ActionSpaceDef discreteActionSpace, continuousActionSpace;
+            switch (ActionSpaceType)
             {
                 case SpaceType.Continuous:
-                    ContinuousActuatorSpace = ActuatorSpace.MakeContinuous(vectorActionSize[0]);
-                    DiscreteActuatorSpace = ActuatorSpace.MakeDiscrete(Array.Empty<int>());
+                    continuousActionSpace = ActionSpaceDef.MakeContinuous(vectorActionSize[0]);
+                    discreteActionSpace = ActionSpaceDef.MakeDiscrete(Array.Empty<int>());
                     suffix = "-Continuous";
                     break;
                 case SpaceType.Discrete:
-                    DiscreteActuatorSpace = ActuatorSpace.MakeDiscrete(vectorActionSize);
-                    ContinuousActuatorSpace = ActuatorSpace.MakeContinuous(0);
+                    discreteActionSpace = ActionSpaceDef.MakeDiscrete(vectorActionSize);
+                    continuousActionSpace = ActionSpaceDef.MakeContinuous(0);
                     suffix = "-Discrete";
                     break;
                 default:
@@ -36,38 +46,36 @@ namespace Unity.MLAgents.Actuators
                         spaceType,
                         "Unknown enum value.");
             }
+
             m_Name = name + suffix;
+            ActuatorSpace = new ActuatorSpace(continuousActionSpace, discreteActionSpace);
         }
+
+        public SpaceType ActionSpaceType { get; }
 
         public void ResetData()
         {
-            DiscreteActions = new ActionSegment<int>();
-            ContinuousActions = new ActionSegment<float>();
+            m_ActionBuffers.DiscreteActions = new ActionSegment<int>();
+            m_ActionBuffers.ContinuousActions = new ActionSegment<float>();
         }
 
-        public void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+        public void OnActionReceived(ActionBuffers actionBuffers)
         {
-            ContinuousActions = continuousActions;
-            DiscreteActions = discreteActions;
-            m_ActionReceiver.OnActionReceived(ContinuousActions, DiscreteActions);
+            m_ActionBuffers = actionBuffers;
+            m_ActionReceiver.OnActionReceived(m_ActionBuffers);
         }
 
         public void WriteDiscreteActionMask(IDiscreteActionMask actionMask)
         {
-            if (m_SpaceType == SpaceType.Discrete)
+            if (ActionSpaceType == SpaceType.Discrete)
             {
-                // TODO: Call into agent?
+                m_ActionReceiver.WriteDiscreteActionMask(actionMask);
             }
         }
 
-        public ActionSegment<int> DiscreteActions { get; private set; }
-        public ActionSegment<float> ContinuousActions { get; private set; }
-        public int TotalNumberOfActions
-        {
-            get { return ContinuousActuatorSpace.NumActions + DiscreteActuatorSpace.NumActions; }
-        }
-        public ActuatorSpace DiscreteActuatorSpace { get; }
-        public ActuatorSpace ContinuousActuatorSpace { get; }
+
+        public int TotalNumberOfActions => m_ActuatorSpace.ContinuousActionSpaceDef.NumActions +
+            m_ActuatorSpace.DiscreteActionSpaceDef.NumActions;
 
         public string GetName()
         {

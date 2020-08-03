@@ -67,10 +67,11 @@ public class HallwayAgent : Agent
         m_AgentRb.AddForce(dirToGo * m_HallwaySettings.agentRunSpeed, ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         AddReward(-1f / MaxStep);
-        MoveAgent(discreteActions);
+        MoveAgent(actionBuffers.DiscreteActions);
     }
 
     void OnCollisionEnter(Collision col)

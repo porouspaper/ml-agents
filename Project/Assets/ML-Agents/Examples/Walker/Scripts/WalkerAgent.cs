@@ -129,11 +129,13 @@ public class WalkerAgent : Agent
         }
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         var bpDict = m_JdController.bodyPartsDict;
         var i = -1;
 
+        var continuousActions = actionBuffers.ContinuousActions;
         bpDict[chest].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], continuousActions[++i]);
         bpDict[spine].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], continuousActions[++i]);
 

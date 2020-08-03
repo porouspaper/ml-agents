@@ -164,10 +164,11 @@ public class PushAgentBasic : Agent
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.
     /// </summary>
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         // Move the agent using the action.
-        MoveAgent(discreteActions);
+        MoveAgent(actionBuffers.DiscreteActions);
 
         // Penalty given each step to encourage agent to finish task quickly.
         AddReward(-1f / MaxStep);

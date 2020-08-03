@@ -129,11 +129,13 @@ public class CrawlerAgent : Agent
         AddReward(1f);
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         // The dictionary with all the body parts in it are in the jdController
         var bpDict = m_JdController.bodyPartsDict;
 
+        var continuousActions = actionBuffers.ContinuousActions;
         var i = -1;
         // Pick a new target joint rotation
         bpDict[leg0Upper].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);

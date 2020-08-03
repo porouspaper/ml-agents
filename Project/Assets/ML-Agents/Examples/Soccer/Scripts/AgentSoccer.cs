@@ -144,7 +144,8 @@ public class AgentSoccer : Agent
             ForceMode.VelocityChange);
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
 
         if (position == Position.Goalie)
@@ -162,7 +163,7 @@ public class AgentSoccer : Agent
             // Existential penalty cumulant for Generic
             timePenalty -= m_Existential;
         }
-        MoveAgent(discreteActions);
+        MoveAgent(actionBuffers.DiscreteActions);
     }
 
     public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)

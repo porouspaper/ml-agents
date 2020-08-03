@@ -9,7 +9,8 @@ public class TemplateAgent : Agent
     {
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
     }
 

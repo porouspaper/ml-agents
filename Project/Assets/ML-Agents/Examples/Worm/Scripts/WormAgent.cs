@@ -141,12 +141,14 @@ public class WormAgent : Agent
         target.position = newTargetPos + ground.position;
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
         // The dictionary with all the body parts in it are in the jdController
         var bpDict = m_JdController.bodyPartsDict;
 
         var i = -1;
+        var continuousActions = actionBuffers.ContinuousActions;
         // Pick a new target joint rotation
         bpDict[bodySegment1].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);
         bpDict[bodySegment2].SetJointTargetRotation(continuousActions[++i], continuousActions[++i], 0);

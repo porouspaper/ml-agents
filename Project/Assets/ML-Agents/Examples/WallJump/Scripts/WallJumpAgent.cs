@@ -246,9 +246,10 @@ public class WallJumpAgent : Agent
         jumpingTime -= Time.fixedDeltaTime;
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
-        MoveAgent(discreteActions);
+        MoveAgent(actionBuffers.DiscreteActions);
         if ((!Physics.Raycast(m_AgentRb.position, Vector3.down, 20))
             || (!Physics.Raycast(m_ShortBlockRb.position, Vector3.down, 20)))
         {

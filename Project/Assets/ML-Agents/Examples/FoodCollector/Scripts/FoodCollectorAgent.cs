@@ -205,9 +205,10 @@ public class FoodCollectorAgent : Agent
         gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
-        MoveAgent(discreteActions);
+        MoveAgent(actionBuffers.DiscreteActions);
     }
 
     public override void Heuristic(float[] continuousActionsOut, int[] discreteActionsOut)

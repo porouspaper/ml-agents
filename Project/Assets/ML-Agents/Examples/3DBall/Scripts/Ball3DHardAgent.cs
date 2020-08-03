@@ -24,8 +24,10 @@ public class Ball3DHardAgent : Agent
         sensor.AddObservation((ball.transform.position - gameObject.transform.position));
     }
 
-    public override void OnActionReceived(ActionSegment<float> continuousActions, ActionSegment<int> discreteActions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
+
     {
+        var continuousActions = actionBuffers.ContinuousActions;
         var actionZ = 2f * Mathf.Clamp(continuousActions[0], -1f, 1f);
         var actionX = 2f * Mathf.Clamp(continuousActions[1], -1f, 1f);
 
