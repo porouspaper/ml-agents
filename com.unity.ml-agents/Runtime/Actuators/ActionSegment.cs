@@ -12,16 +12,20 @@ namespace Unity.MLAgents.Actuators
 
         public static ActionSegment<T> Empty = new ActionSegment<T>(System.Array.Empty<T>(), 0, 0);
 
-        public static ActionSegment<T> MakeActionSegment(T[] actionArray, int offset, int length)
+        static void CheckParameters(T[] actionArray, int offset, int length)
         {
-            if (length == 0)
+#if DEBUG
+            if (offset + length > actionArray.Length)
             {
-                return Empty;
+                throw new ArgumentOutOfRangeException(nameof(offset), $"Arguments offset: {offset} and length: {length} " +
+                    $"are out of bounds of actionArray: {actionArray.Length}.");
             }
-            return new ActionSegment<T>(actionArray, offset, length);
+#endif
         }
+
         public ActionSegment(T[] actionArray, int offset, int length)
         {
+            CheckParameters(actionArray, offset, length);
             Array = actionArray;
             Offset = offset;
             Length = length;
