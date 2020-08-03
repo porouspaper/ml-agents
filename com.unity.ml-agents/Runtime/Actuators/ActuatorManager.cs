@@ -83,6 +83,7 @@ namespace Unity.MLAgents.Actuators
 
         public void WriteActionMask()
         {
+            m_DiscreteActionMask.ResetMask();
             var offset = 0;
             for (var i = 0; i < m_Actuators.Count; i++)
             {

@@ -37,6 +37,11 @@ namespace Unity.MLAgents
         /// </remarks>
         /// <param name="branch">The branch for which the actions will be masked.</param>
         /// <param name="actionIndices">The indices of the masked actions.</param>
+        public void SetMask(int branch, IEnumerable<int> actionIndices)
+        {
+            m_Delegate.WriteMask(branch, actionIndices);
+        }
+
         public void WriteMask(int branch, IEnumerable<int> actionIndices)
         {
             m_Delegate.WriteMask(branch, actionIndices);
