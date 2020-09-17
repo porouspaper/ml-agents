@@ -818,4 +818,4 @@ ScriptsOnlyBuild:
   platform: 24
   scenePathNames:
   - Assets/Scenes/SampleScene.unity
-  playerPath: /Users/genakim/ml-agents-2/ml-agents/GardeningGame/test_build.x86_64
+  playerPath: /Users/genakim/ml-agents-2/ml-agents/GardeningGame/test_build_1.x86_64
