@@ -1,0 +1,46 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1600303942",
+        "python_version": "3.7.6 (default, Dec 30 2019, 19:38:28) \n[Clang 11.0.0 (clang-1100.0.33.16)]",
+        "command_line_arguments": "/Users/genakim/python-envs/sample-env/bin/mlagents-learn config/ppo/Gardening.yaml --run-id=runnyrun1",
+        "mlagents_version": "0.17.0",
+        "mlagents_envs_version": "0.17.0",
+        "communication_protocol_version": "1.0.0",
+        "tensorflow_version": "2.2.0",
+        "end_time_seconds": "1600303977"
+    },
+    "total": 34.963775775,
+    "count": 1,
+    "self": 0.02122127900000237,
+    "children": {
+        "run_training.setup": {
+            "total": 0.03483434600000024,
+            "count": 1,
+            "self": 0.03483434600000024
+        },
+        "TrainerController.start_learning": {
+            "total": 34.90772015,
+            "count": 1,
+            "self": 0.005593331000000035,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 34.901549182000004,
+                    "count": 1,
+                    "self": 34.901549182000004
+                },
+                "trainer_threads": {
+                    "total": 4.626999995593906e-06,
+                    "count": 1,
+                    "self": 4.626999995593906e-06
+                },
+                "TrainerController._save_model": {
+                    "total": 0.0005730100000036487,
+                    "count": 1,
+                    "self": 0.0005730100000036487
+                }
+            }
+        }
+    }
+}
